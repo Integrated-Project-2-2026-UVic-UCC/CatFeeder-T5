@@ -67,14 +67,13 @@ The electronics subsystem is composed of the following modules:
 
 ## 📂 Folder Structure
 electronics/
-│
-├── schematics/          → Circuit schematics (PDF / CAD files)
-├── pcb/                 → PCB layout files (if applicable)
-├── simulations/         → SPICE or equivalent simulations
-├── datasheets/          → Relevant component datasheets
-├── calculations/        → Design calculations (power, current, filtering)
-├── testing/             → Validation and measurement reports
-└── README.md            → This document
+
+- schematics/          → Circuit schematics (PDF / CAD files)
+- pcb/                 → PCB layout files (if applicable)
+- datasheets/          → Relevant component datasheets
+- calculations/        → Design calculations (power, current, filtering)
+- testing/             → Validation and measurement reports
+- README.md            → This document
 
 
 ---
