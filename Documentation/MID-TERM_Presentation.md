@@ -1,21 +1,20 @@
-## MID - TERM PRESENTATION
+## MID-TERM PRESENTATION
 
 ---
 
 ### SLIDE 1 - Title Slide
 
-**Project Title:**  
-Automatic Cat Feeder System
+**Automatic Cat Feeder**  
+**Integrated Project II - Mid-Term Presentation**
 
-**Mid-Term Project Presentation**
-
-- Author: Your Name
-- Institution / Course
-- Date
+- Team: T5
+- Course: Integrated Project II
+- Institution: Universitat de Vic – Universitat Central de Catalunya
+- Academic Year: 2025–2026
 
 #### Speaker notes:
-This presentation summarizes the progress of the Automatic Cat Feeder project at the mid-term stage.  
-I will present the objectives of the project, the work completed so far, the methodology used, current results, challenges encountered, and the next steps planned for the remainder of the project.
+This presentation summarizes the current state of the Automatic Cat Feeder project at mid-term.  
+We will present the project objectives, team organization, planning methodology, the current prototype status, website and GitHub progress, and the next steps toward the final delivery.
 
 ---
 
@@ -23,225 +22,254 @@ I will present the objectives of the project, the work completed so far, the met
 
 #### Text on slide
 
-**Main Goal**  
-Design and develop an automatic cat feeder system controlled via a mobile application.
+**Main Objective**
+
+Design and implement an automatic cat feeder capable of reliable, safe, and autonomous dispensing of controlled food portions at scheduled times.
 
 **Specific Objectives**
 
-- Automate food dispensing for pets
-- Allow remote control via mobile app
-- Implement scheduled feeding
-- Monitor feeding activity
-- Ensure reliability and safety of the system
+- Develop a scheduling system for automatic feeding
+- Ensure controlled and repeatable food portions
+- Improve reliability and safety during operation
+- Reduce the need for constant human intervention
 
 #### Speaker notes:
-
-The main goal of this project is to design and implement an automatic cat feeder that can be controlled from a mobile application.  
-The system should allow scheduled feeding, manual food dispensing, and monitoring of feeding events.  
-Reliability and ease of use are important factors in the system design.
+The main goal of the project is to create an automatic feeder that can dispense food in a reliable, safe, and autonomous way.  
+The system must deliver food at programmed times and in controlled portions.  
+This helps guarantee regular feeding while avoiding overfeeding, underfeeding, and unnecessary food waste.
 
 ---
 
-### SLIDE 3 - Project Scope
+### SLIDE 3 - Team Organization and Roles
 
 #### Text on slide
 
-**System Components**
+**Project Manager**  
+- Biel Tomàs Rifà  
+- Oversees project coordination
 
-- Mechanical feeder mechanism
-- Embedded controller
-- Mobile application
-- Communication system
+**Mechanical Leader**  
+- Pol Roch Jose  
+- Leads mechanical design efforts
 
-**Main Functionalities**
+**Electronics Leader**  
+- Georgina Garcia Vilaseca  
+- Manages hardware integration
 
-- Scheduled feeding
-- Manual feeding from the app
-- Feeding history
-- Device configuration
+**Software Leader**  
+- Ferran Vila Ordeig  
+- Develops control algorithms
 
 #### Speaker notes:
-
-The project involves both hardware and software components.  
-The system consists of a feeding mechanism controlled by an embedded system and connected to a mobile application.  
-The application allows users to configure feeding schedules and control the feeder remotely.
+The project is organized with clearly defined responsibilities.  
+The project manager coordinates the overall development, planning, and communication.  
+The mechanical leader is responsible for the structural and feeder mechanism design.  
+The electronics leader handles hardware integration, and the software leader develops the control logic and programming of the system.
 
 ---
 
-### SLIDE 4 - Methodology and Tools
+### SLIDE 4 - Project Organization and Management
 
 #### Text on slide
 
-**Development Approach**
+**Working Method**
 
-- Iterative development
-- Prototype-based design
+- Sprint-based planning
+- Progressive prototype development
+- Shared task distribution across disciplines
+- Periodic progress tracking
 
-**Tools and Technologies**
+**Main Milestones**
 
-- Microcontroller platform
-- Mobile application framework
-- Communication protocol (WiFi / Bluetooth / MQTT)
-- Version control (Git)
+- T1: Budgeting, schematics, design refinement
+- T2: Component procurement and fabrication start
+- T3: Electronics wiring, programming, mechanical assembly
+- T4: Continuation of wiring, coding, and assembly
+- T5: Finalizing assembly and starting functional tests
+- T6: Code refinement and testing
+- T7: Intensive functional testing
+- T8: Final validation and presentation
 
 #### Speaker notes:
-
-The development process follows an iterative methodology where components are progressively tested and improved.  
-Hardware and software prototypes are developed and validated before moving to the next stage.  
-Tools such as version control and development frameworks are used to manage the project efficiently.
+The team follows a sprint-based work structure.  
+Each sprint focuses on a specific set of goals, from design and procurement to assembly, testing, and final validation.  
+This helps distribute the workload and monitor progress continuously.  
+At the current stage, the project is transitioning from design and procurement into implementation and early testing.
 
 ---
 
-### SLIDE 5 - System Architecture
+### SLIDE 5 - Prototype Overview
 
 #### Text on slide
 
-**System Overview**
+**Prototype Purpose**
 
-Mobile App  
-⬇  
-Communication Layer  
-⬇  
-Embedded Controller  
-⬇  
-Feeding Mechanism
+Develop an automatic feeder capable of dispensing food portions autonomously and safely.
 
-**Key Modules**
+**Main Characteristics**
 
-- App Interface
-- Communication Module
-- Control Logic
-- Motor Control System
+- Automated food dispensing
+- Scheduled operation
+- Embedded control system
+- Focus on accuracy, reliability, and modularity
+
+**Innovation Aspects**
+
+- Combination of mechanical dispensing and embedded control
+- Open documentation approach
+- Reproducible design with future scalability
 
 #### Speaker notes:
-
-The system architecture consists of a mobile application that communicates with the feeder device.  
-The embedded controller manages the feeding schedule and activates the motor that dispenses food.  
-Communication between the app and the device enables remote control and monitoring.
+The prototype combines a mechanical food delivery system with an embedded controller that manages timing and operation.  
+The project emphasizes controlled dispensing, safe motor operation, and future modularity.  
+A relevant aspect of the project is that it is being documented openly, which supports reproducibility and future improvements.
 
 ---
 
-### SLIDE 6 - Work Completed So Far
+### SLIDE 6 - Prototype Current Status
 
 #### Text on slide
 
-✔ Project planning and requirements definition  
-✔ System architecture design  
-✔ Initial hardware selection  
-✔ Communication concept design  
-✔ Mobile app flow design  
+**Completed / In Progress**
+
+- General project concept defined
+- Mechanical design direction established
+- Electronics integration planned
+- Programming logic under development
+- Initial assembly and functional preparation ongoing
+
+**Current Job Stoppers**
+
+- Full hardware-software integration
+- Functional validation of the dispensing mechanism
+- End-to-end testing under real operating conditions
 
 #### Speaker notes:
-
-So far, the main design phase has been completed.  
-The requirements of the system were defined and the architecture of the system was designed.  
-Hardware components were selected and the structure of the mobile application was defined.
+At mid-term, the project already has a defined technical direction.  
+The overall concept, mechanical approach, and electronics strategy are established.  
+Programming and integration are currently in development.  
+The main remaining challenge is validating the complete system under real conditions and confirming that the dispensing mechanism performs consistently.
 
 ---
 
-### SLIDE 7 - Application Flow
+### SLIDE 7 - Mechanical, Electronics and Programming Status
 
 #### Text on slide
 
-**Main Application Flow**
+**Mechanical Domain**
 
-1. User login
-2. Device connection
-3. Feeding schedule configuration
-4. Manual feeding control
-5. Feeding history monitoring
+- Feeder mechanism design in progress
+- Assembly planning underway
+- Focus on reliable and repeatable dispensing
+
+**Electronics Domain**
+
+- Hardware integration defined
+- Wiring and control electronics being implemented
+- Safe motor operation considered a key requirement
+
+**Programming Domain**
+
+- Control logic under development
+- Scheduling behavior being implemented
+- Code refinement planned in later sprints
 
 #### Speaker notes:
-
-The mobile application allows users to interact with the feeder.  
-Users can configure feeding schedules, manually trigger feeding, and check the history of feeding events.  
-The application is designed to be simple and intuitive.
+From the mechanical perspective, the project is focused on achieving a robust dispensing mechanism.  
+From the electronics side, the integration of the controller and the actuator system is being prepared and implemented.  
+In software, the priority is building the scheduling and control logic that will coordinate feeder operation safely and reliably.  
+The next major milestone is to connect these three domains into a functional prototype.
 
 ---
 
-### SLIDE 8 - Current Results
+### SLIDE 8 - Website Update
 
 #### Text on slide
 
-**Progress Achieved**
+**Project Website Status**
 
-- System design completed
-- App interaction flow defined
-- Hardware architecture established
+- Website planned on GitHub Pages
+- Open-source documentation approach
+- Reproducible project steps
+- Demonstration material will be included
 
-**Prototype Status**
+**Purpose of the Website**
 
-- Initial prototype under development
-- Core functionality being implemented
+- Central hub for project documentation
+- Public explanation of the system
+- Support for replication and collaboration
 
 #### Speaker notes:
-
-At this stage, the conceptual design of the system is complete.  
-The architecture of the hardware and software components has been defined, and the first prototype implementation is underway.
+The project website is intended to serve as the public-facing documentation hub.  
+It will be hosted on GitHub Pages and will include project explanations, reproducible build steps, and demonstration content.  
+This is important because the final project is expected to be documented clearly enough for other people to understand and replicate it.
 
 ---
 
-### SLIDE 9 - Challenges Encountered
+### SLIDE 9 - GitHub Update
 
 #### Text on slide
 
-**Technical Challenges**
+**Current GitHub Use**
 
-- Reliable communication between app and device
-- Mechanical reliability of food dispensing
-- Power management
+- Project planning and milestones tracked
+- Technical progress documented
+- Code files to be uploaded and maintained
+- Repository supports collaboration and version control
 
-**Development Challenges**
+**Repository Should Include**
 
-- Integration between hardware and software
-- Testing of real-world scenarios
+- Planning and milestones
+- Weekly or periodic reports
+- Code and technical files
+- Calculations, schemes, and design documentation
 
 #### Speaker notes:
-
-Several challenges were encountered during the development phase.  
-One of the main challenges is ensuring reliable communication between the mobile application and the feeder device.  
-Another challenge is designing a feeding mechanism that consistently dispenses the correct amount of food.
+GitHub is being used as the central repository for project management and technical development.  
+It should contain the planning, milestone progress, reports, code, and technical documentation.  
+For the final stages, it is important that all relevant design files, programming files, and implementation evidence are uploaded and organized correctly.
 
 ---
 
-### SLIDE 10 - Next Steps
+### SLIDE 10 - References and Documentation Inspiration
 
 #### Text on slide
 
-**Short-Term Tasks**
+**Main References**
 
-- Develop hardware prototype
-- Implement communication protocol
-- Build initial version of the mobile application
-
-**Future Work**
-
-- System integration
-- Testing and validation
-- Performance optimization
+- DIY Automatic PetFeeder IoT (Instructables)
+- MicroPython Auto Pet Feeder / ESP32 tutorial resources
+- Market benchmarking from El País and Xataka
+- ANFAAC sectoral data on pet ownership and market trends
+- Additional YouTube project inspiration for feeder design
 
 #### Speaker notes:
-
-The next phase of the project focuses on building the hardware prototype and implementing the communication system.  
-Once the components are integrated, the system will undergo testing and optimization to ensure reliability.
+The project references include both technical and contextual sources.  
+Instructables and ESP32/MicroPython resources provide implementation guidance for feeder logic and embedded integration.  
+Market references help identify useful features and user expectations.  
+Sectoral data also provides context on the relevance of automated pet care devices.
 
 ---
 
-### SLIDE 11 - Conclusion
+### SLIDE 11 - Mid-Term Conclusion
 
 #### Text on slide
 
-✔ Project progressing according to plan  
-✔ System architecture defined  
-✔ Prototype development started  
+**Mid-Term Summary**
 
-**Next milestone:** Functional prototype
+- Objectives are clearly defined
+- Team roles and planning structure are established
+- Prototype development is underway
+- Website and GitHub documentation are in progress
+
+**Next Milestone**
+
+- Functional integrated prototype with initial testing
 
 #### Speaker notes:
-
-In conclusion, the project is progressing according to the planned schedule.  
-The system design has been completed and development of the prototype has begun.  
-The next milestone will be the creation of a fully functional prototype of the automatic cat feeder system.
+In conclusion, the project is progressing according to the expected mid-term path.  
+The objectives, team structure, and planning are already defined, and the prototype is under active development.  
+The next major goal is to complete the first integrated functional version and begin structured validation tests.
 
 ---
 
@@ -249,11 +277,9 @@ The next milestone will be the creation of a fully functional prototype of the a
 
 #### Text on slide
 
-**Thank you for your attention**
-
-Questions?
+**Thank you for your attention**  
+**Questions?**
 
 #### Speaker notes:
-
 Thank you for your attention.  
-I will now be happy to answer any questions.
+We are now ready to answer any questions about the project, its current status, and the next development stages.
