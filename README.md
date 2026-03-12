@@ -1,7 +1,7 @@
 # 🐱 Automatic Cat Feeder  
 **Integrated Project II – GR15 [GEMEC-09UV]**  
 Universitat de Vic – Universitat Central de Catalunya  
-Academic Year 2025–2026  
+Academic Year 2025–2026.
 
 ---
 
