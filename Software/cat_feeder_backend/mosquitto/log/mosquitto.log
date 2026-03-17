@@ -1,0 +1,121 @@
+1773163606: mosquitto version 2.1.2 starting
+1773163606: Config loaded from /mosquitto/config/mosquitto.conf.
+1773163606: Bridge support available.
+1773163606: Persistence support available.
+1773163606: TLS support available.
+1773163606: TLS-PSK support available.
+1773163606: Websockets support available.
+1773163606: Opening ipv4 listen socket on port 1883.
+1773163606: Opening ipv6 listen socket on port 1883.
+1773163606: mosquitto version 2.1.2 running
+1773163660: New connection from ::1:47170 on port 1883.
+1773163660: New client connected from ::1:47170 as auto-DA99361C-AA2E-1AFA-028E-F31CECF21A99 (p4, c1, k60).
+1773163660: Client auto-DA99361C-AA2E-1AFA-028E-F31CECF21A99 [::1:47170] disconnected.
+1773163660: New connection from ::1:47184 on port 1883.
+1773163660: New client connected from ::1:47184 as auto-8FD0A846-13FE-982B-FBFE-14D68807F6A5 (p4, c1, k60).
+1773163660: Client auto-8FD0A846-13FE-982B-FBFE-14D68807F6A5 [::1:47184] disconnected.
+1773163913: New connection from 192.168.65.1:54393 on port 1883.
+1773163913: New client connected from 192.168.65.1:54393 as cat_feeder_backend_1773163913183 (p4, c1, k60).
+1773163952: New connection from ::1:59400 on port 1883.
+1773163952: New client connected from ::1:59400 as auto-7302280E-60DF-1D2A-0A41-4FD327EA84B9 (p4, c1, k60).
+1773163952: Client auto-7302280E-60DF-1D2A-0A41-4FD327EA84B9 [::1:59400] disconnected.
+1773163952: New connection from ::1:59408 on port 1883.
+1773163952: New client connected from ::1:59408 as auto-C73890E0-A93C-E3D8-2E97-813EBBD2D8FC (p4, c1, k60).
+1773163952: Client auto-C73890E0-A93C-E3D8-2E97-813EBBD2D8FC [::1:59408] disconnected.
+1773164142: Client cat_feeder_backend_1773163913183 [192.168.65.1:54393] disconnected: connection closed by client.
+1773164151: mosquitto version 2.1.2 terminating
+1773164151: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1773310703: mosquitto version 2.1.2 starting
+1773310703: Config loaded from /mosquitto/config/mosquitto.conf.
+1773310703: Bridge support available.
+1773310703: Persistence support available.
+1773310703: TLS support available.
+1773310703: TLS-PSK support available.
+1773310703: Websockets support available.
+1773310703: Opening ipv4 listen socket on port 1883.
+1773310703: Opening ipv6 listen socket on port 1883.
+1773310703: mosquitto version 2.1.2 running
+1773310703: New connection from 192.168.65.1:61237 on port 1883.
+1773310703: New client connected from 192.168.65.1:61237 as esp32-cat-feeder-mock (p4, c1, k15).
+1773310768: New connection from 192.168.65.1:49525 on port 1883.
+1773310768: New client connected from 192.168.65.1:49525 as cat_feeder_backend_1773310768521 (p4, c1, k60).
+1773311133: Client cat_feeder_backend_1773310768521 [192.168.65.1:49525] disconnected: connection closed by client.
+1773311200: mosquitto version 2.1.2 terminating
+1773311200: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1773311210: mosquitto version 2.1.2 starting
+1773311210: Config loaded from /mosquitto/config/mosquitto.conf.
+1773311210: Bridge support available.
+1773311210: Persistence support available.
+1773311210: TLS support available.
+1773311210: TLS-PSK support available.
+1773311210: Websockets support available.
+1773311210: Opening ipv4 listen socket on port 1883.
+1773311210: Opening ipv6 listen socket on port 1883.
+1773311210: mosquitto version 2.1.2 running
+1773311220: New connection from 192.168.65.1:51675 on port 1883.
+1773311220: New client connected from 192.168.65.1:51675 as esp32-cat-feeder-mock (p4, c1, k15).
+1773311295: New connection from 192.168.65.1:58538 on port 1883.
+1773311295: New client connected from 192.168.65.1:58538 as cat_feeder_backend_1773311294996 (p4, c1, k60).
+1773311386: Client esp32-cat-feeder-mock [192.168.65.1:51675] disconnected: exceeded timeout.
+1773311386: New connection from ::1:59762 on port 1883.
+1773311386: New client connected from ::1:59762 as auto-98C5B753-A734-4C5F-1B3C-2285D8FCB39B (p4, c1, k60).
+1773311386: Client auto-98C5B753-A734-4C5F-1B3C-2285D8FCB39B [::1:59762] disconnected.
+1773311386: New connection from ::1:59774 on port 1883.
+1773311386: New client connected from ::1:59774 as auto-A7C69C67-6EAD-4997-6699-032516A1E086 (p4, c1, k60).
+1773311386: Client auto-A7C69C67-6EAD-4997-6699-032516A1E086 [::1:59774] disconnected.
+1773311634: New connection from 192.168.65.1:59049 on port 1883.
+1773311634: New client connected from 192.168.65.1:59049 as cat_feeder_backend_1773311634205 (p4, c1, k60).
+1773311649: Client cat_feeder_backend_1773311634205 [192.168.65.1:59049] disconnected: connection closed by client.
+1773311735: New connection from 192.168.65.1:44015 on port 1883.
+1773311735: New client connected from 192.168.65.1:44015 as esp32-cat-feeder-mock (p4, c1, k15).
+1773311763: New connection from 192.168.65.1:37032 on port 1883.
+1773311763: Client esp32-cat-feeder-mock [192.168.65.1:44015] disconnected: session taken over.
+1773311763: New client connected from 192.168.65.1:37032 as esp32-cat-feeder-mock (p4, c1, k15).
+1773312427: Client cat_feeder_backend_1773311294996 [192.168.65.1:58538] disconnected: connection closed by client.
+1773312440: mosquitto version 2.1.2 terminating
+1773312440: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1773324392: mosquitto version 2.1.2 starting
+1773324392: Config loaded from /mosquitto/config/mosquitto.conf.
+1773324392: Bridge support available.
+1773324392: Persistence support available.
+1773324392: TLS support available.
+1773324392: TLS-PSK support available.
+1773324392: Websockets support available.
+1773324392: Opening ipv4 listen socket on port 1883.
+1773324392: Opening ipv6 listen socket on port 1883.
+1773324392: mosquitto version 2.1.2 running
+1773324449: New connection from 172.19.0.1:65450 on port 1883.
+1773324449: New client connected from 172.19.0.1:65450 as cat_feeder_backend_1773324449464 (p4, c1, k60).
+1773324464: mosquitto version 2.1.2 terminating
+1773324464: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1773324562: mosquitto version 2.1.2 starting
+1773324562: Config loaded from /mosquitto/config/mosquitto.conf.
+1773324562: Bridge support available.
+1773324562: Persistence support available.
+1773324562: TLS support available.
+1773324562: TLS-PSK support available.
+1773324562: Websockets support available.
+1773324562: Opening ipv4 listen socket on port 1883.
+1773324562: Opening ipv6 listen socket on port 1883.
+1773324562: mosquitto version 2.1.2 running
+1773324581: New connection from 172.19.0.1:63002 on port 1883.
+1773324581: New client connected from 172.19.0.1:63002 as cat_feeder_backend_1773324581351 (p4, c1, k60).
+1773324753: New connection from 172.19.0.1:64062 on port 1883.
+1773324753: New client connected from 172.19.0.1:64062 as cat_feeder_backend_1773324753522 (p4, c1, k60).
+1773324766: Client cat_feeder_backend_1773324581351 [172.19.0.1:63002] disconnected: connection closed by client.
+1773326362: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1773326824: Client cat_feeder_backend_1773324753522 [172.19.0.1:64062] disconnected: connection closed by client.
+1773326873: mosquitto version 2.1.2 terminating
+1773326873: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1773695606: mosquitto version 2.1.2 starting
+1773695606: Config loaded from /mosquitto/config/mosquitto.conf.
+1773695606: Bridge support available.
+1773695606: Persistence support available.
+1773695606: TLS support available.
+1773695606: TLS-PSK support available.
+1773695606: Websockets support available.
+1773695606: Opening ipv4 listen socket on port 1883.
+1773695606: Opening ipv6 listen socket on port 1883.
+1773695606: mosquitto version 2.1.2 running
+1773695663: mosquitto version 2.1.2 terminating
+1773695663: Saving in-memory database to /mosquitto/data//mosquitto.db.
