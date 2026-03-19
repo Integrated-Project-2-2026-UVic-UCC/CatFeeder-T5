@@ -43,26 +43,32 @@
 */
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
+#include <HTTPClient.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
-#include <HTTPClient.h>
-#include <ArduinoJson.h>
 
 // ──────────────────────────────────────────────
 //  USER CONFIGURATION — edit before uploading
 // ──────────────────────────────────────────────
-const char* WIFI_SSID       = "Lab-Modul";
-const char* WIFI_PASS       = "GVe836Nf";
+const char *WIFI_SSID = "Lab-Modul";
+const char *WIFI_PASS = "GVe836Nf";
 
 // Supabase project (matches webapp .env)
-const char* SUPABASE_URL    = "https://jawqxuzlvvzsrobftupx.supabase.co";
-// ⚠️  IMPORTANT: Use the anon JWT key (NOT the publishable key sb_publishable_...).
+const char *SUPABASE_URL = "https://jawqxuzlvvzsrobftupx.supabase.co";
+// ⚠️  IMPORTANT: Use the anon JWT key (NOT the publishable key
+// sb_publishable_...).
 //     The REST API requires a JWT in the Authorization header.
-//     Get this from: Supabase Dashboard → Project → Settings → API → anon/public
-const char* SUPABASE_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphd3F4dXpsdnZ6c3JvYmZ0dXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjY2MjcsImV4cCI6MjA4OTQ0MjYyN30.FnvhOpqhZh9Z3j2XkIPla1wUbx3wAsaP4anr44Utrzs";
+//     Get this from: Supabase Dashboard → Project → Settings → API →
+//     anon/public
+const char *SUPABASE_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+    "eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphd3F4dXpsdnZ6c3JvYmZ0dXB4Iiwicm9sZSI6Im"
+    "Fub24iLCJpYXQiOjE3NzM4NjY2MjcsImV4cCI6MjA4OTQ0MjYyN30."
+    "FnvhOpqhZh9Z3j2XkIPla1wUbx3wAsaP4anr44Utrzs";
 
 // Register a device in the webapp first, then paste the UUID here
-const char* DEVICE_ID       = "8a96c22a-1b29-47a8-8ca1-0f47e5aa2edd";
+const char *DEVICE_ID = "8a96c22a-1b29-47a8-8ca1-0f47e5aa2edd";
 
 // ──────────────────────────────────────────────
 //  SIMULATION PARAMETERS
@@ -71,47 +77,52 @@ const char* DEVICE_ID       = "8a96c22a-1b29-47a8-8ca1-0f47e5aa2edd";
 #define DEBUG_LOG true
 
 // Simulated sensor noise bands
-const float WEIGHT_NOISE_G    =  1.5f;   // ±g random variation per reading
-const float TEMP_BASE_C       = 23.0f;   // base ambient temperature
-const float TEMP_NOISE_C      =  0.8f;
-const float HUM_BASE_PCT      = 48.0f;
-const float HUM_NOISE_PCT     =  2.0f;
+const float WEIGHT_NOISE_G = 1.5f; // ±g random variation per reading
+const float TEMP_BASE_C = 23.0f;   // base ambient temperature
+const float TEMP_NOISE_C = 0.8f;
+const float HUM_BASE_PCT = 48.0f;
+const float HUM_NOISE_PCT = 2.0f;
 
 // Motor simulation
-const float DISPENSE_RATE_G_S = 8.0f;   // simulated grams per second dispensed
+const float DISPENSE_RATE_G_S = 8.0f; // simulated grams per second dispensed
 
 // ──────────────────────────────────────────────
 //  GLOBAL STATE
 // ──────────────────────────────────────────────
-enum DeviceState { STATE_IDLE, STATE_DISPENSING, STATE_FAULT_MOTOR, STATE_FAULT_SENSOR };
+enum DeviceState {
+  STATE_IDLE,
+  STATE_DISPENSING,
+  STATE_FAULT_MOTOR,
+  STATE_FAULT_SENSOR
+};
 
-DeviceState  g_state        = STATE_IDLE;
-float        g_currentWeight = 0.0f;
-float        g_targetWeight  = 0.0f;
-float        g_dispensedWeight = 0.0f;
-String       g_activeCmdId  = "";
-String       g_activeCatId  = "";
-bool         g_tarePending  = false;
-bool         g_restartPending = false;
+DeviceState g_state = STATE_IDLE;
+float g_currentWeight = 0.0f;
+float g_targetWeight = 0.0f;
+float g_dispensedWeight = 0.0f;
+String g_activeCmdId = "";
+String g_activeCatId = "";
+bool g_tarePending = false;
+bool g_restartPending = false;
 
 // Config from Supabase
-int          g_configVersion     = -1;
-float        g_calibrationFactor = 1.0f;
-int          g_motorTimeout      = 30;
-float        g_hopperCapacity    = 2000.0f;
+int g_configVersion = -1;
+float g_calibrationFactor = 1.0f;
+int g_motorTimeout = 30;
+float g_hopperCapacity = 2000.0f;
 
 // Timers
-unsigned long g_lastHeartbeat   = 0;
-unsigned long g_lastConfigPoll  = 0;
-unsigned long g_lastCmdPoll     = 0;
-unsigned long g_lastWeightPost  = 0;
-unsigned long g_dispenseStart   = 0;
+unsigned long g_lastHeartbeat = 0;
+unsigned long g_lastConfigPoll = 0;
+unsigned long g_lastCmdPoll = 0;
+unsigned long g_lastWeightPost = 0;
+unsigned long g_dispenseStart = 0;
 
 // Intervals (ms)
-const unsigned long HEARTBEAT_INTERVAL  = 30000;
-const unsigned long CONFIG_INTERVAL     = 60000;
-const unsigned long CMD_POLL_INTERVAL   = 5000;
-const unsigned long WEIGHT_POST_INTERVAL= 500;
+const unsigned long HEARTBEAT_INTERVAL = 30000;
+const unsigned long CONFIG_INTERVAL = 60000;
+const unsigned long CMD_POLL_INTERVAL = 5000;
+const unsigned long WEIGHT_POST_INTERVAL = 500;
 
 // ──────────────────────────────────────────────
 //  UTILITY: random float in range
@@ -127,7 +138,7 @@ float randRange(float lo, float hi) {
 
 /**
  * readWeight() — simulates HX711 load cell reading
- * 
+ *
  * REAL IMPLEMENTATION (replace this block):
  *   #include "HX711.h"
  *   HX711 scale;
@@ -142,7 +153,7 @@ float readWeight() {
 
 /**
  * readTemperature() — simulates DHT22 temperature sensor
- * 
+ *
  * REAL IMPLEMENTATION:
  *   #include "DHT.h"
  *   DHT dht(DHT_PIN, DHT22);
@@ -154,7 +165,7 @@ float readTemperature() {
 
 /**
  * readHumidity() — simulates DHT22 humidity sensor
- * 
+ *
  * REAL IMPLEMENTATION:
  *   return dht.readHumidity();
  */
@@ -164,37 +175,39 @@ float readHumidity() {
 
 /**
  * setMotorRunning() — simulates DRV8825 stepper motor control
- * 
+ *
  * REAL IMPLEMENTATION:
  *   digitalWrite(MOTOR_ENABLE_PIN, running ? LOW : HIGH);
  *   if (running) { step motor via STEP/DIR pins }
  */
 void setMotorRunning(bool running) {
-  if (DEBUG_LOG) Serial.printf("[MOTOR] %s\n", running ? "START" : "STOP");
+  if (DEBUG_LOG)
+    Serial.printf("[MOTOR] %s\n", running ? "START" : "STOP");
   // TODO: digitalWrite(MOTOR_ENABLE_PIN, running ? LOW : HIGH);
 }
 
 /**
  * performTare() — simulates zeroing the scale
- * 
+ *
  * REAL IMPLEMENTATION:
  *   scale.tare();
  */
 void performTare() {
   g_currentWeight = 0.0f;
   g_dispensedWeight = 0.0f;
-  if (DEBUG_LOG) Serial.println("[TARE] Scale zeroed");
+  if (DEBUG_LOG)
+    Serial.println("[TARE] Scale zeroed");
   // TODO: scale.tare();
 }
 
 // ──────────────────────────────────────────────
 //  HTTP HELPERS
 // ──────────────────────────────────────────────
-String buildUrl(const char* path) {
+String buildUrl(const char *path) {
   return String(SUPABASE_URL) + "/rest/v1/" + path;
 }
 
-bool supabaseGet(const String& path, JsonDocument& out) {
+bool supabaseGet(const String &path, JsonDocument &out) {
   WiFiClientSecure client;
   client.setInsecure();
   HTTPClient http;
@@ -211,11 +224,13 @@ bool supabaseGet(const String& path, JsonDocument& out) {
     deserializeJson(out, payload);
     return true;
   }
-  if (DEBUG_LOG) Serial.printf("[HTTP GET ERROR] %s → %d | %s\n", path.c_str(), code, payload.c_str());
+  if (DEBUG_LOG)
+    Serial.printf("[HTTP GET ERROR] %s → %d | %s\n", path.c_str(), code,
+                  payload.c_str());
   return false;
 }
 
-bool supabasePost(const String& path, const String& body) {
+bool supabasePost(const String &path, const String &body) {
   WiFiClientSecure client;
   client.setInsecure();
   HTTPClient http;
@@ -229,7 +244,7 @@ bool supabasePost(const String& path, const String& body) {
   bool ok = (code >= 200 && code < 300);
   if (!ok && DEBUG_LOG) {
     Serial.printf("[HTTP POST ERROR] %s → %d\n  Body: %s\n  Resp: %s\n",
-      path.c_str(), code, body.c_str(), http.getString().c_str());
+                  path.c_str(), code, body.c_str(), http.getString().c_str());
   } else if (DEBUG_LOG) {
     Serial.printf("[HTTP POST OK] %s → %d\n", path.c_str(), code);
   }
@@ -237,7 +252,7 @@ bool supabasePost(const String& path, const String& body) {
   return ok;
 }
 
-bool supabasePatch(const String& path, const String& body) {
+bool supabasePatch(const String &path, const String &body) {
   WiFiClientSecure client;
   client.setInsecure();
   HTTPClient http;
@@ -251,7 +266,7 @@ bool supabasePatch(const String& path, const String& body) {
   bool ok = (code >= 200 && code < 300);
   if (!ok && DEBUG_LOG) {
     Serial.printf("[HTTP PATCH ERROR] %s → %d\n  Body: %s\n  Resp: %s\n",
-      path.c_str(), code, body.c_str(), http.getString().c_str());
+                  path.c_str(), code, body.c_str(), http.getString().c_str());
   } else if (DEBUG_LOG) {
     Serial.printf("[HTTP PATCH OK] %s → %d\n", path.c_str(), code);
   }
@@ -264,95 +279,133 @@ bool supabasePatch(const String& path, const String& body) {
 // ──────────────────────────────────────────────
 
 void postHeartbeat() {
-  if (strlen(DEVICE_ID) < 10) return; // guard: no device ID
+  if (strlen(DEVICE_ID) < 10)
+    return; // guard: no device ID
   String status;
   switch (g_state) {
-    case STATE_IDLE:         status = "idle"; break;
-    case STATE_DISPENSING:   status = "dispensing"; break;
-    case STATE_FAULT_MOTOR:  status = "fault_motor"; break;
-    case STATE_FAULT_SENSOR: status = "fault_sensor"; break;
+  case STATE_IDLE:
+    status = "idle";
+    break;
+  case STATE_DISPENSING:
+    status = "dispensing";
+    break;
+  case STATE_FAULT_MOTOR:
+    status = "fault_motor";
+    break;
+  case STATE_FAULT_SENSOR:
+    status = "fault_sensor";
+    break;
   }
   // Use a fixed reference epoch + millis() offset to approximate ISO time
   // For real hardware, use NTP: configTime(0,0,"pool.ntp.org") + getLocalTime()
-  String body = "{\"status\":\"" + status + "\","
+  String body = "{\"status\":\"" + status +
+                "\","
                 "\"firmware_version\":\"mock-1.0.0\"}";
   supabasePatch(String("devices?id=eq.") + DEVICE_ID, body);
 }
 
 void postRealtimeWeight(float weight) {
-  if (strlen(DEVICE_ID) < 10) return;
-  String body = "{\"device_id\":\"" + String(DEVICE_ID) + "\","
-                "\"weight_grams\":" + String(weight, 2) + "}";
+  if (strlen(DEVICE_ID) < 10)
+    return;
+  String body = "{\"device_id\":\"" + String(DEVICE_ID) +
+                "\","
+                "\"weight_grams\":" +
+                String(weight, 2) + "}";
   supabasePost("realtime_weight", body);
 }
 
-void postFeedEvent(float actual, const String& status, const String& errCode = "") {
-  if (strlen(DEVICE_ID) < 10) return;
-  String body = "{\"device_id\":\"" + String(DEVICE_ID) + "\","
-                "\"cat_id\":" + (g_activeCatId.length() ? "\"" + g_activeCatId + "\"" : "null") + ","
-                "\"trigger_type\":\"manual\","
-                "\"target_grams\":" + String(g_targetWeight, 1) + ","
-                "\"actual_grams\":" + String(actual, 1) + ","
-                "\"status\":\"" + status + "\""
-                + (errCode.length() ? ",\"error_code\":\"" + errCode + "\"" : "") +
-                "}";
+void postFeedEvent(float actual, const String &status,
+                   const String &errCode = "") {
+  if (strlen(DEVICE_ID) < 10)
+    return;
+  String body =
+      "{\"device_id\":\"" + String(DEVICE_ID) +
+      "\","
+      "\"cat_id\":" +
+      (g_activeCatId.length() ? "\"" + g_activeCatId + "\"" : "null") +
+      ","
+      "\"trigger_type\":\"manual\","
+      "\"target_grams\":" +
+      String(g_targetWeight, 1) +
+      ","
+      "\"actual_grams\":" +
+      String(actual, 1) +
+      ","
+      "\"status\":\"" +
+      status + "\"" +
+      (errCode.length() ? ",\"error_code\":\"" + errCode + "\"" : "") + "}";
   supabasePost("feed_events", body);
 }
 
-void markCommandStatus(const String& cmdId, const String& status) {
-  if (cmdId.length() < 10) return;
+void markCommandStatus(const String &cmdId, const String &status) {
+  if (cmdId.length() < 10)
+    return;
   String body = "{\"status\":\"" + status + "\"}";
   supabasePatch(String("commands?id=eq.") + cmdId, body);
 }
 
 void pollConfig() {
-  if (strlen(DEVICE_ID) < 10) return;
+  if (strlen(DEVICE_ID) < 10)
+    return;
   JsonDocument doc;
-  if (!supabaseGet(String("device_config?device_id=eq.") + DEVICE_ID + "&limit=1", doc)) return;
-  if (doc.as<JsonArray>().size() == 0) return;
+  if (!supabaseGet(
+          String("device_config?device_id=eq.") + DEVICE_ID + "&limit=1", doc))
+    return;
+  if (doc.as<JsonArray>().size() == 0)
+    return;
 
   JsonObject cfg = doc[0];
   int ver = cfg["config_version"] | 1;
-  if (ver == g_configVersion) return; // no change
+  if (ver == g_configVersion)
+    return; // no change
 
-  g_configVersion      = ver;
-  g_calibrationFactor  = cfg["calibration_factor"]     | 1.0f;
-  g_motorTimeout       = cfg["motor_timeout_seconds"]   | 30;
-  g_hopperCapacity     = cfg["hopper_capacity_grams"]   | 2000.0f;
-  bool tareTrigger     = cfg["tare_trigger"]            | false;
+  g_configVersion = ver;
+  g_calibrationFactor = cfg["calibration_factor"] | 1.0f;
+  g_motorTimeout = cfg["motor_timeout_seconds"] | 30;
+  g_hopperCapacity = cfg["hopper_capacity_grams"] | 2000.0f;
+  bool tareTrigger = cfg["tare_trigger"] | false;
 
-  if (tareTrigger) g_tarePending = true;
+  if (tareTrigger)
+    g_tarePending = true;
 
-  if (DEBUG_LOG) Serial.printf("[CONFIG] v%d loaded · cal=%.4f · timeout=%ds\n",
-    g_configVersion, g_calibrationFactor, g_motorTimeout);
+  if (DEBUG_LOG)
+    Serial.printf("[CONFIG] v%d loaded · cal=%.4f · timeout=%ds\n",
+                  g_configVersion, g_calibrationFactor, g_motorTimeout);
 }
 
 void pollCommands() {
-  if (strlen(DEVICE_ID) < 10) return;
-  if (g_state == STATE_DISPENSING) return; // busy — skip
+  if (strlen(DEVICE_ID) < 10)
+    return;
+  if (g_state == STATE_DISPENSING)
+    return; // busy — skip
 
   JsonDocument doc;
-  String path = String("commands?device_id=eq.") + DEVICE_ID
-              + "&status=eq.pending&order=created_at.asc&limit=1";
-  if (!supabaseGet(path, doc)) return;
-  if (doc.as<JsonArray>().size() == 0) return;
+  String path = String("commands?device_id=eq.") + DEVICE_ID +
+                "&status=eq.pending&order=created_at.asc&limit=1";
+  if (!supabaseGet(path, doc))
+    return;
+  if (doc.as<JsonArray>().size() == 0)
+    return;
 
   JsonObject cmd = doc[0];
-  String cmdId   = cmd["id"].as<String>();
+  String cmdId = cmd["id"].as<String>();
   String cmdType = cmd["command_type"].as<String>();
 
-  if (DEBUG_LOG) Serial.printf("[CMD] Received: %s (id=%s)\n", cmdType.c_str(), cmdId.c_str());
+  if (DEBUG_LOG)
+    Serial.printf("[CMD] Received: %s (id=%s)\n", cmdType.c_str(),
+                  cmdId.c_str());
 
   if (cmdType == "feed") {
-    float portion    = cmd["portion_grams"] | 50.0f;
-    g_activeCatId    = cmd["cat_id"].as<String>();
-    g_activeCmdId    = cmdId;
-    g_targetWeight   = portion;
-    g_dispensedWeight= 0.0f;
-    g_dispenseStart  = millis();
-    g_state          = STATE_DISPENSING;
+    float portion = cmd["portion_grams"] | 50.0f;
+    g_activeCatId = cmd["cat_id"].as<String>();
+    g_activeCmdId = cmdId;
+    g_targetWeight = portion;
+    g_dispensedWeight = 0.0f;
+    g_dispenseStart = millis();
+    g_state = STATE_DISPENSING;
     setMotorRunning(true);
-    Serial.printf("[DISPENSE] Starting: %.1fg for cat %s\n", portion, g_activeCatId.c_str());
+    Serial.printf("[DISPENSE] Starting: %.1fg for cat %s\n", portion,
+                  g_activeCatId.c_str());
 
   } else if (cmdType == "tare") {
     performTare();
@@ -372,7 +425,7 @@ void pollCommands() {
 void updateDispensing() {
   float elapsed = (millis() - g_dispenseStart) / 1000.0f;
   g_dispensedWeight = min(g_targetWeight, elapsed * DISPENSE_RATE_G_S);
-  g_currentWeight   = g_dispensedWeight;
+  g_currentWeight = g_dispensedWeight;
 
   // Check motor timeout (safety limit)
   if (elapsed > g_motorTimeout) {
@@ -388,7 +441,8 @@ void updateDispensing() {
   if (g_dispensedWeight >= g_targetWeight - 0.5f) {
     setMotorRunning(false);
     float actual = g_dispensedWeight + randRange(-0.5f, 0.5f);
-    Serial.printf("[DISPENSE] Complete! Dispensed: %.1fg (target %.1fg)\n", actual, g_targetWeight);
+    Serial.printf("[DISPENSE] Complete! Dispensed: %.1fg (target %.1fg)\n",
+                  actual, g_targetWeight);
     postFeedEvent(actual, "completed");
     markCommandStatus(g_activeCmdId, "completed");
     g_state = STATE_IDLE;
@@ -415,11 +469,14 @@ void setup() {
 
   int tries = 0;
   while (WiFi.status() != WL_CONNECTED && tries < 40) {
-    delay(500); Serial.print("."); tries++;
+    delay(500);
+    Serial.print(".");
+    tries++;
   }
 
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.printf("\n[WiFi] Connected! IP: %s\n", WiFi.localIP().toString().c_str());
+    Serial.printf("\n[WiFi] Connected! IP: %s\n",
+                  WiFi.localIP().toString().c_str());
   } else {
     Serial.println("\n[WiFi] FAILED — running in offline simulation mode");
   }
@@ -476,7 +533,8 @@ void loop() {
       g_lastWeightPost = now;
       float w = readWeight();
       postRealtimeWeight(w);
-      if (DEBUG_LOG) Serial.printf("[WEIGHT] %.2fg\n", w);
+      if (DEBUG_LOG)
+        Serial.printf("[WEIGHT] %.2fg\n", w);
     }
   }
 
@@ -486,10 +544,8 @@ void loop() {
     g_tarePending = false;
     // Update config to clear tare_trigger flag
     if (strlen(DEVICE_ID) >= 10) {
-      supabasePatch(
-        String("device_config?device_id=eq.") + DEVICE_ID,
-        "{\"tare_trigger\":false}"
-      );
+      supabasePatch(String("device_config?device_id=eq.") + DEVICE_ID,
+                    "{\"tare_trigger\":false}");
     }
   }
 
@@ -504,11 +560,11 @@ void loop() {
   if (now - lastPrint >= 10000) {
     lastPrint = now;
     float temp = readTemperature();
-    float hum  = readHumidity();
+    float hum = readHumidity();
     float w = readWeight();
     Serial.printf("[SYS] State=%d | Weight=%.1fg | Temp=%.1f°C | Hum=%.1f%%\n",
-      (int)g_state, w, temp, hum);
-      
+                  (int)g_state, w, temp, hum);
+
     // Post weight so the web app shows it even when idle
     if (g_state != STATE_DISPENSING) {
       postRealtimeWeight(w);
