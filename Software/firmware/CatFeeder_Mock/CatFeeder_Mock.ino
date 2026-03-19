@@ -322,7 +322,7 @@ void postFeedEvent(float actual, const String &status,
       "{\"device_id\":\"" + String(DEVICE_ID) +
       "\","
       "\"cat_id\":" +
-      (g_activeCatId.length() ? "\"" + g_activeCatId + "\"" : "null") +
+      (g_activeCatId.length() ? "\"" + g_activeCatId + "\"" : String("null")) +
       ","
       "\"trigger_type\":\"manual\","
       "\"target_grams\":" +
@@ -333,7 +333,8 @@ void postFeedEvent(float actual, const String &status,
       ","
       "\"status\":\"" +
       status + "\"" +
-      (errCode.length() ? ",\"error_code\":\"" + errCode + "\"" : "") + "}";
+      (errCode.length() ? ",\"error_code\":\"" + errCode + "\"" : String("")) +
+      "}";
   supabasePost("feed_events", body);
 }
 
