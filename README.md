@@ -90,6 +90,21 @@ This structure enables parallel development while maintaining centralized coordi
 
 ---
 
+## 🚧 Prototype Status
+
+The automatic cat feeder is currently in the **prototype development stage**. The main system architecture has already been defined, and progress has been made in the mechanical, electronic, and software subsystems. Preliminary tests have been carried out on some sensors and electronic components to validate their suitability for the application. The next phase will focus on subsystem integration, PCB assembly, functional verification, and reliability testing under real operating conditions.
+
+| Subsystem | Status |
+|---|---|
+| Mechanical system | In progress |
+| Electronics system | In progress |
+| Sensor validation | Partially completed |
+| Embedded software | In progress |
+| PCB design | In progress |
+| Full prototype integration | Pending |
+| Final testing and validation | Pending |
+
+
 ## 📚 References
 
 - ANFAAC – Sectoral Data  
