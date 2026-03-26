@@ -1,24 +1,27 @@
-# 🐱 Automatic Cat Feeder  
+# 🐱 Automatic Cat Feeder
 **Integrated Project II – GR15 [GEMEC-09UV]**  
-Universitat de Vic – Universitat Central de Catalunya.
-Academic Year 2025–2026.
+**Universitat de Vic – Universitat Central de Catalunya**  
+**Academic Year 2025–2026**
 ---
 
 ## 📌 Project Overview
 
-Pet ownership has significantly increased in recent years, while modern lifestyles often limit the time available for daily pet care. Feeding is one of the most critical and repetitive tasks in pet ownership, requiring consistency, portion control, and reliability to ensure animal health.
+Pet ownership has increased significantly in recent years, while modern lifestyles often reduce the time available for routine pet care. Feeding is one of the most important daily tasks, as it requires consistency, portion control, and reliability to maintain the animal’s health.
 
-This project aims to design and implement a **reliable, autonomous automatic cat feeder** capable of dispensing controlled food portions at predefined times using embedded systems and automation principles.
+This project aims to design and implement a **reliable and autonomous automatic cat feeder** capable of dispensing controlled food portions at predefined times using embedded systems, sensor feedback, and automation principles.
 
-Unlike many commercial solutions, this system focuses on:
+Compared with many commercial solutions, this system focuses on:
 
-- Accurate portion control  
-- Mechanical reliability  
-- Safe motor operation  
-- Embedded system coordination  
-- Future scalability and modularity  
+- Accurate portion control
+- Mechanical reliability
+- Safe motor operation
+- Embedded system coordination
+- Future scalability and modularity
 
 ---
+## 🖼 Concept Render
+
+![Technical drawing](Documentation/Cat_Render.png)
 
 ## 🎯 Objectives
 
