@@ -1,57 +1,23 @@
 #include <Arduino.h>
-#include "DHT.h"
+#include "HX711.h"
 
-// =========================
-// Pin and sensor type
-// =========================
-constexpr uint8_t DHT_PIN = 15;
-constexpr uint8_t DHT_TYPE = DHT22;
+constexpr uint8_t HX711_DOUT_PIN = 4;
+constexpr uint8_t HX711_SCK_PIN  = 5;
 
-// =========================
-// DHT instance
-// =========================
-DHT dht(DHT_PIN, DHT_TYPE);
+HX711 scale;
 
 void setup() {
   Serial.begin(115200);
-  delay(1000);
-
-  Serial.println();
-  Serial.println("Starting DHT22 test...");
-
-  dht.begin();
+  scale.begin(HX711_DOUT_PIN, HX711_SCK_PIN);
 }
 
 void loop() {
-  // Read humidity
-  float humidity = dht.readHumidity();
-
-  // Read temperature in Celsius
-  float temperatureC = dht.readTemperature();
-
-  // Optional: Fahrenheit
-  float temperatureF = dht.readTemperature(true);
-
-  // Check if any reads failed
-  if (isnan(humidity) || isnan(temperatureC) || isnan(temperatureF)) {
-    Serial.println("ERROR: Failed to read from DHT22 sensor.");
-    delay(2000);
-    return;
+  if (scale.is_ready()) {
+    Serial.print("Raw: ");
+    Serial.println(scale.read());
+  } else {
+    Serial.println("HX711 not ready.");
   }
 
-  Serial.print("Humidity: ");
-  Serial.print(humidity, 1);
-  Serial.println(" %");
-
-  Serial.print("Temperature: ");
-  Serial.print(temperatureC, 1);
-  Serial.println(" °C");
-
-  Serial.print("Temperature: ");
-  Serial.print(temperatureF, 1);
-  Serial.println(" °F");
-
-  Serial.println("------------------------");
-
-  delay(2000);
+  delay(500);
 }
