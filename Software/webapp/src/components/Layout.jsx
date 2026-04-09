@@ -8,6 +8,7 @@ const NAV = [
   { icon: '🗓', label: 'Schedules', to: '/schedules' },
   { icon: '📊', label: 'History',   to: '/history' },
   { icon: '📡', label: 'Device',    to: '/device' },
+  { icon: '💬', label: 'AI Chat',   to: '/chat' },
   { icon: '⚙️', label: 'Settings',  to: '/settings' },
 ]
 
@@ -18,6 +19,7 @@ const ICONS = {
   '/schedules': '◷',
   '/history':   '◈',
   '/device':    '◎',
+  '/chat':      '💬',
   '/settings':  '◌',
 }
 
@@ -56,6 +58,7 @@ export default function Layout() {
             { icon: '◷', label: 'Schedules', to: '/schedules' },
             { icon: '◈', label: 'History',   to: '/history' },
             { icon: '◎', label: 'Device',    to: '/device' },
+            { icon: '💬', label: 'AI Chat',  to: '/chat' },
           ].map(({ icon, label, to }) => (
             <NavLink
               key={to}

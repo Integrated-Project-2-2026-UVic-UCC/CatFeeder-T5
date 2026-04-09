@@ -11,6 +11,7 @@ import SchedulesPage from './pages/SchedulesPage'
 import HistoryPage from './pages/HistoryPage'
 import DevicePage from './pages/DevicePage'
 import SettingsPage from './pages/SettingsPage'
+import ChatPage from './pages/ChatPage'
 import ToastContainer from './components/ToastContainer'
 
 function PrivateRoute({ children }) {
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="history" element={<HistoryPage />} />
           <Route path="device" element={<DevicePage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="chat" element={<ChatPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
