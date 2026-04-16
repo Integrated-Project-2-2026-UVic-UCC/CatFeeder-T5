@@ -89,8 +89,8 @@ void setup() {
   // --- Button / switch I/O --------------------------------------------------
   pinMode(BTN_FEED, INPUT_PULLUP);
   pinMode(BTN_TARE, INPUT_PULLUP);
-  pinMode(BTN_MENU, INPUT_PULLUP);
-  pinMode(SQUISHY_PIN, INPUT_PULLUP);
+  pinMode(BTN_MENU, INPUT);        // Ext pull-up required (pin 34)
+  pinMode(SQUISHY_PIN, INPUT);     // Ext pull-up required (pin 35)
 
   // --- Stepper driver off until we really need it ---------------------------
   pinMode(STEPPER_EN, OUTPUT);

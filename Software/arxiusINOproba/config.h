@@ -27,7 +27,7 @@
 // --------------------------- Display (ILI9488 SPI) -------------------------
 // The concrete pins are defined in the TFT_eSPI User_Setup.h (see README).
 // Suggested mapping (VSPI):
-//   MOSI = 23  MISO = 19  SCLK = 18  CS = 5  DC = 2  RST = 4  BL = 3V3
+//   MOSI = 23  MISO = 19  SCLK = 18  CS = 15  DC = 2  RST = 4  BL = 32
 // Display is used as OUTPUT ONLY — the touch panel is intentionally unused.
 #define DISPLAY_ROTATION        1        // landscape 480x320
 
@@ -46,13 +46,13 @@
 #define SCALE_STABLE_THRESHOLD_G  0.3f
 
 // --------------------------- DHT22 -----------------------------------------
-#define DHT_PIN                 27
+#define DHT_PIN                 33
 #define DHT_READ_INTERVAL_MS    2500     // DHT22 minimum sampling is ~2s
 
 // --------------------------- Stepper NEMA 17 + DRV8825 / A4988 -------------
-#define STEPPER_STEP            25
-#define STEPPER_DIR             26
-#define STEPPER_EN              33       // Active-LOW enable on most drivers
+#define STEPPER_STEP            26
+#define STEPPER_DIR             27
+#define STEPPER_EN              25       // Active-LOW enable on most drivers
 #define STEPPER_STEPS_PER_REV   200      // 1.8°/step motor
 #define STEPPER_MICROSTEPS      16       // Wire MS1/MS2/MS3 accordingly
 #define STEPPER_MAX_SPEED       2000.0f  // steps/s (after microstepping)
@@ -66,16 +66,17 @@
 #define STEPPER_FEED_RATE_GPS   8.0f
 
 // --------------------------- Buttons ---------------------------------------
-// All buttons wired between GPIO and GND, using internal INPUT_PULLUP.
-#define BTN_FEED                32       // Manual dispense
-#define BTN_TARE                13       // Tare scale
-#define BTN_MENU                14       // Cycle display screens
+// All buttons wired between GPIO and GND.
+// NOTE: 34 & 35 are input-only and do NOT have internal pullups, add external 10k resistors.
+#define BTN_FEED                13       // Manual dispense
+#define BTN_TARE                14       // Tare scale
+#define BTN_MENU                34       // Cycle display screens
 #define BTN_DEBOUNCE_MS         35
 
 // --------------------------- Squishy Circuits switch -----------------------
 // Soft conductive-dough contact. Used here as a "cat-present" confirmation
 // input (cat touches the pad to request food).
-#define SQUISHY_PIN             15
+#define SQUISHY_PIN             35
 #define SQUISHY_DEBOUNCE_MS     120
 
 // --------------------------- Feeder defaults -------------------------------
