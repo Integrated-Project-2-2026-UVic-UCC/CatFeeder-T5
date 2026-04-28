@@ -334,20 +334,28 @@ static bool checkCornerTouch(uint16_t tx, uint16_t ty) {
     {0,           SCREEN_H-z},
     {SCREEN_W-z,  SCREEN_H-z}
   };
+  const char* names[4] = {"TL","TR","BL","BR"};
 
   uint8_t expected = cornerHitCount;
   if (expected >= CORNER_COUNT) return false;
 
   Zone &z2 = zones[expected];
+  // DEBUG: mostra on cau el toc i quina zona s'espera
+  Serial.printf("[check] toc px=(%u,%u)  esperat=%s zona x=%d..%d y=%d..%d\n",
+                tx, ty, names[expected],
+                z2.x, z2.x+z, z2.y, z2.y+z);
+
   if (tx >= z2.x && tx < z2.x + z && ty >= z2.y && ty < z2.y + z) {
     if (cornerHitCount == 0) firstCornerMs = millis();
     cornerHit[expected] = true;
     cornerHitCount++;
-    Serial.printf("[unlock] corner %u hit\n", expected);
+    Serial.printf("[unlock] corner %u (%s) HIT!\n", expected, names[expected]);
     if (cornerHitCount == CORNER_COUNT) {
-      Serial.println(F("[unlock] pattern complete!"));
+      Serial.println(F("[unlock] pattern complet!"));
       return true;
     }
+  } else {
+    Serial.println(F("[unlock] fora de zona"));
   }
   return false;
 }
@@ -609,6 +617,10 @@ static bool getTouchPoint(uint16_t &tx, uint16_t &ty) {
     return false;
   }
   bool ok = tft.getTouch(&tx, &ty);
+  if (ok) {
+    // DEBUG: coordenades mapejades + pressió crua
+    Serial.printf("[touch] px=(%u,%u) rawZ=%u\n", tx, ty, z);
+  }
   return ok;
 }
 
