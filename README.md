@@ -1,4 +1,4 @@
-# Automatic Cat Feeder
+# 🐱 Automatic Cat Feeder
 
 Modular automatic cat feeder based on Arduino/ESP32, motorized food dispensing, scheduled feeding, and sensor-based portion control.
 
