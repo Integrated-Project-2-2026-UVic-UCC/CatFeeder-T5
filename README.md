@@ -25,7 +25,6 @@ YouTube video demo: _coming soon_
   - Motor driver
   - Sensors
   - Power supply
-  - Optional modules
 - Arduino code
   - Project structure
   - Control algorithm
@@ -72,11 +71,11 @@ Recommended printing settings:
 
 ## Hardware parts
 
-| Component | Description | Quantity | Notes |
-|---|---|---:|---|
-| M3 screws | General assembly screws | 10–20 pcs | Length depends on printed parts |
-| M3 nuts | For mechanical assembly | 10–20 pcs | Optional if using threaded inserts |
-| Threaded inserts | Stronger screw mounting | Optional | Recommended for repeated disassembly |
+| Image | Component | Description | Quantity | Notes |
+|---|---|---|---:|---|
+| <img src="./images/m3-screws.jpg" width="90"> | M3 screws | General assembly screws | 10–20 pcs | Length depends on printed parts |
+| <img src="./images/m3-nuts.jpg" width="90"> | M3 nuts | Nuts for mechanical assembly | 10–20 pcs | Optional if using threaded inserts |
+| <img src="./images/threaded-inserts.jpg" width="90"> | Threaded inserts | Metal inserts for stronger screw mounting | Optional | Recommended for repeated disassembly |
 
 ---
 
@@ -86,14 +85,14 @@ This prototype uses the electronic components required to control the automatic 
 
 ## Components used
 
-| Image | Component | Quantity | Description | Purpose | Price / Link |
-|---|---|---:|---|---|---|
-| ![ESP32-WROOM-32](images/esp32-wroom-32.jpg) | ESP32-WROOM-32 | 1 | Wi-Fi and Bluetooth microcontroller | Controls the feeder logic, motor driver, sensors, and display | [View price]([https://example.com/esp32](https://www.amazon.es/ESP32-ESP-WROOM-32-Desarrollo-inal%C3%A1mbrico-procesador/dp/B0C6J5BYRM/ref=asc_df_B0C6J5BYRM?mcid=b0e3085728e83385ae5a39cfdfa99f37&tag=googshopes-21&linkCode=df0&hvadid=699858699962&hvpos=&hvnetw=g&hvrand=15961287127364510246&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=1005469&hvtargid=pla-2272902549996&psc=1&hvocijid=15961287127364510246-B0C6J5BYRM-&hvexpln=0)) |
-| ![NEMA 17](images/nema17.jpg) | NEMA 17 stepper motor | 1 | Bipolar stepper motor | Rotates the dispensing mechanism | [View price]([https://example.com/nema17](https://www.turibot.es/motor-paso-a-paso-nema-17-168a?srsltid=AfmBOor6OBEMva2VZPrr3iuxMb6zarBQi_lWawFhaDk6PjFO5lCNueqC)) |
-| ![DRV8825](images/drv8825.jpg) | DRV8825 stepper motor driver | 1 | Stepper motor driver module | Drives the NEMA 17 motor | [View price](https://example.com/drv8825) |
-| ![Mini UPS](images/mini-ups-6000mah.jpg) | SAI Mini UPS 6000 mAh | 1 | Backup power supply | Keeps the feeder powered during short power interruptions | [View price](https://example.com/mini-ups) |
-| ![LCD TFT Display](images/lcd-tft-35.jpg) | 3.5" LCD TFT Touch Display | 1 | Touchscreen display module | Displays information and allows user interaction | [View price](https://example.com/lcd) |
-| ![DHT22](images/dht22.jpg) | DHT22 | 1 | Temperature and humidity sensor | Measures ambient temperature and humidity | [View price](https://example.com/dht22) |
+| Image | Component | Quantity | Description | Purpose |
+|---|---|---:|---|---|
+| <img src="./images/esp32-wroom-32.jpg" width="90"> | ESP32-WROOM-32 | 1 | Wi-Fi and Bluetooth capable microcontroller | Controls the feeder logic, motor driver, sensors, and user interface |
+| <img src="./images/nema17-stepper-motor.jpg" width="90"> | NEMA 17 stepper motor | 1 | Bipolar stepper motor | Rotates the dispensing mechanism |
+| <img src="./images/drv8825-driver.jpg" width="90"> | DRV8825 stepper motor driver | 1 | Stepper motor driver module | Drives the NEMA 17 motor from the ESP32 control signals |
+| <img src="./images/mini-ups-6000mah.jpg" width="90"> | SAI Mini UPS 6000 mAh | 1 | Backup power supply | Keeps the feeder powered also during short power interruptions |
+| <img src="./images/lcd-tft-35-touch-display.jpg" width="90"> | 3.5" LCD TFT Touch Display | 1 | Touchscreen display module | Displays system information and allows user interaction |
+| <img src="./images/dht22-sensor.jpg" width="90"> | DHT22 | 1 | Temperature and humidity sensor | Measures temperature and humidity |
 
 ---
 
