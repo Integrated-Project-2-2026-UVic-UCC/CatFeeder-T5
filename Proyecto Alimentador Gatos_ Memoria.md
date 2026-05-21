@@ -75,10 +75,13 @@ Donde ![][image12] es la sensibilidad del sensor (normalmente 1.0 o 2.0 mV/V), !
 | Componente Electrónico | Modelo | Función |
 | :---- | :---- | :---- |
 | Microcontrolador | ESP32-WROOM-32 | Cerebro del sistema, gestión WiFi/MQTT |
-| Driver de Motor | L298N o TB6612FNG | Control de dirección y velocidad (PWM) |
-| Sensor de Peso | Load Cell 5kg \+ HX711 | Medición de la ración dispensada |
-| Sensor de Nivel | Infrarrojo (TCRT5000) | Detección de tolva vacía |
-| Pantalla Local | OLED 0.96" I2C | Visualización de estado y IP |
+| Driver de Motor | DRV8825 | Control de dirección y velocidad del motor paso a paso |
+| Motor Paso a Paso | NEMA 17 Stepper Motor | Accionamiento mecánico del dispensador |
+| Sensor de Peso | Load Cell 5kg + HX711 | Medición de la ración dispensada |
+| Sensor de Temperatura y Humedad | DHT22 | Medición de temperatura y humedad ambiental |
+| Reloj en Tiempo Real | RTC DS3231 + AT24C32 I2C | Mantenimiento de fecha/hora incluso sin conexión o reinicio |
+| Pantalla Local | 3.5" LCD TFT Touch Display | Visualización local del estado, menús e interacción táctil |
+| Alimentación | SAI Mini UPS 6000 mAh | Alimentación|
 
 ## **Firmware y Lógica de Programación**
 
