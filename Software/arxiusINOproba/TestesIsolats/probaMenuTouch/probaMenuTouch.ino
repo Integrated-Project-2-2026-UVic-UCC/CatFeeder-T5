@@ -298,29 +298,51 @@ static void drawUnlockScreen() {
   tft.drawString("Desbloqueig de seguretat", SCREEN_W / 2, 12);
   tft.setTextSize(1);
   tft.setTextColor(UI_COL_MUTED, UI_COL_BG);
-  tft.drawString("Toca les 4 cantonades en ordre: TL > TR > BL > BR", SCREEN_W / 2, 38);
+  tft.drawString("Toca TR i BR alternant: TR > BR > TR > BR", SCREEN_W / 2, 38);
 
   int z = CORNER_HIT_ZONE_PX;
-  int xs[4] = {0, SCREEN_W - z, 0, SCREEN_W - z};
-  int ys[4] = {0, 0, SCREEN_H - z, SCREEN_H - z};
-  const char* labels[4] = {"TL", "TR", "BL", "BR"};
+  
+  // Dibuixem només les cantonades de la dreta (TR i BR) ja que el cantó esquerre és defectuós
+  int xs[2] = {SCREEN_W - z, SCREEN_W - z};
+  int ys[2] = {0, SCREEN_H - z};
+  const char* labels[2] = {"TR", "BR"};
+  
+  // Indiquem quina cantonada és la següent en la seqüència
+  bool expectedTR = (cornerHitCount == 0 || cornerHitCount == 2) && (cornerHitCount < 4);
+  bool expectedBR = (cornerHitCount == 1 || cornerHitCount == 3) && (cornerHitCount < 4);
+  bool expected[2] = {expectedTR, expectedBR};
 
-  for (int i = 0; i < 4; i++) {
-    uint16_t col = cornerHit[i] ? UI_COL_OK : UI_COL_CARD;
+  for (int i = 0; i < 2; i++) {
+    uint16_t col = expected[i] ? UI_COL_ACCENT : UI_COL_CARD;
     tft.fillRect(xs[i], ys[i], z, z, col);
-    tft.drawRect(xs[i], ys[i], z, z, UI_COL_MUTED);
+    tft.drawRect(xs[i], ys[i], z, z, expected[i] ? UI_COL_TEXT : UI_COL_MUTED);
     tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(cornerHit[i] ? UI_COL_BG : UI_COL_MUTED, col);
+    tft.setTextColor(expected[i] ? UI_COL_BG : UI_COL_MUTED, col);
     tft.setTextSize(2);
     tft.drawString(labels[i], xs[i] + z/2, ys[i] + z/2);
   }
 
+  // Text de progrés al centre
   char buf[24];
   snprintf(buf, sizeof(buf), "%u / 4", cornerHitCount);
   tft.setTextDatum(MC_DATUM);
   tft.setTextColor(UI_COL_ACCENT, UI_COL_BG);
   tft.setTextSize(3);
-  tft.drawString(buf, SCREEN_W / 2, SCREEN_H / 2);
+  tft.drawString(buf, SCREEN_W / 2, SCREEN_H / 2 - 10);
+
+  // Dibuixem els 4 indicadors de pas (punts/barres de progrés) per sota del text de progrés
+  int dotY = SCREEN_H / 2 + 25;
+  int dotW = 20;
+  int dotH = 10;
+  int gap = 10;
+  int totalWidth = (4 * dotW) + (3 * gap);
+  int startX = (SCREEN_W - totalWidth) / 2;
+  
+  for (int i = 0; i < 4; i++) {
+    uint16_t col = (cornerHitCount > i) ? UI_COL_OK : UI_COL_CARD;
+    tft.fillRect(startX + i * (dotW + gap), dotY, dotW, dotH, col);
+    tft.drawRect(startX + i * (dotW + gap), dotY, dotW, dotH, UI_COL_MUTED);
+  }
 
   tft.setTextDatum(TL_DATUM);
   screenDirty = false;
@@ -329,13 +351,15 @@ static void drawUnlockScreen() {
 static bool checkCornerTouch(uint16_t tx, uint16_t ty) {
   int z = CORNER_HIT_ZONE_PX;
   struct Zone { int x, y; };
+  
+  // Nou patró alternat que només utilitza les cantonades funcionals de la dreta: TR, BR, TR, BR
   Zone zones[4] = {
-    {0,           0},
-    {SCREEN_W-z,  0},
-    {0,           SCREEN_H-z},
-    {SCREEN_W-z,  SCREEN_H-z}
+    {SCREEN_W-z,  0},           // Pas 0: TR
+    {SCREEN_W-z,  SCREEN_H-z},  // Pas 1: BR
+    {SCREEN_W-z,  0},           // Pas 2: TR
+    {SCREEN_W-z,  SCREEN_H-z}   // Pas 3: BR
   };
-  const char* names[4] = {"TL","TR","BL","BR"};
+  const char* names[4] = {"TR","BR","TR","BR"};
 
   uint8_t expected = cornerHitCount;
   if (expected >= CORNER_COUNT) return false;
