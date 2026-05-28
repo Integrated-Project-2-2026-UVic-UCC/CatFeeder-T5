@@ -21,12 +21,8 @@
 // --------------------------- Supabase (REST) -------------------------------
 // See Software/SRS_CatFeeder_WebApp.docx.md §6 for the protocol.
 #define SUPABASE_URL "https://jawqxuzlvvzsrobftupx.supabase.co"
-#define SUPABASE_ANON_KEY                                                      \
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."                                      \
-  "eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphd3F4dXpsdnZ6c3JvYmZ0dXB4Iiwicm9sZSI6Im" \
-  "Fub24iLCJpYXQiOjE3NzM4NjY2MjcsImV4cCI6MjA4OTQ0MjYyN30."                     \
-  "FnvhOpqhZh9Z3j2XkIPla1wUbx3wAsaP4anr44Utrzs"
-#define DEVICE_ID "44b0f051-549a-4b87-b67a-592254e5c84f"
+#define SUPABASE_ANON_KEY "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphd3F4dXpsdnZ6c3JvYmZ0dXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjY2MjcsImV4cCI6MjA4OTQ0MjYyN30.FnvhOpqhZh9Z3j2XkIPla1wUbx3wAsaP4anr44Utrzs"
+#define DEVICE_ID "7d5961e5-200c-46d9-95da-f0df9d4abc55"
 
 // --------------------------- Display (ILI9488 SPI) -------------------------
 // The concrete pins are defined in the TFT_eSPI User_Setup.h (see README).

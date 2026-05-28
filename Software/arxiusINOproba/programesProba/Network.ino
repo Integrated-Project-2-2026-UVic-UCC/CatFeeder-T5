@@ -98,17 +98,17 @@ static int httpPATCH(const String& endpoint, const String& body) {
 //                             Protocol calls
 // ==========================================================================
 
-// PATCH /rest/v1/devices?device_id=eq.<id>  { last_seen, status, fw }
+// PATCH /rest/v1/devices?id=eq.<id>  { last_seen, status, fw }
 void sendHeartbeat() {
   StaticJsonDocument<192> doc;
-  doc["last_seen"]       = "now()";
+  doc["last_seen"]       = "now";
   doc["status"]          = cycle.active ? "dispensing" :
                            (currentState == STATE_ERROR ? "fault_motor" : "idle");
   doc["firmware_version"] = FW_VERSION;
   String body;
   serializeJson(doc, body);
 
-  String ep = "/rest/v1/devices?device_id=eq." DEVICE_ID;
+  String ep = "/rest/v1/devices?id=eq." DEVICE_ID;
   int code  = httpPATCH(ep, body);
   if (code < 200 || code >= 300) {
     Serial.printf("[net] heartbeat HTTP %d\n", code);
@@ -180,14 +180,13 @@ void pollPendingCommands() {
   }
 }
 
-// --------------------------------------------------------------------------
-// GET /rest/v1/device_config?device_id=eq.<id>&select=schedules,calibration
+// GET /rest/v1/device_config?device_id=eq.<id>&select=schedules_json,calibration_factor
 // The schedules field is a JSON array like:
 //   [ { "id":"...", "cat_id":"...", "hour":8, "minute":30,
 //       "days_of_week":[1,2,3,4,5], "portion_grams":25, "enabled":true }, ... ]
 void pollDeviceConfig() {
   String ep = "/rest/v1/device_config?device_id=eq." DEVICE_ID
-              "&select=schedules,calibration&limit=1";
+              "&select=schedules_json,calibration_factor&limit=1";
   String payload;
   int code = httpGET(ep, payload);
   if (code != 200 || payload.length() < 3) return;
@@ -196,7 +195,7 @@ void pollDeviceConfig() {
   if (deserializeJson(doc, payload)) return;
   if (!doc.is<JsonArray>() || doc.size() == 0) return;
 
-  JsonArray sched = doc[0]["schedules"].as<JsonArray>();
+  JsonArray sched = doc[0]["schedules_json"].as<JsonArray>();
   scheduleClear();
   for (JsonObject s : sched) {
     if (scheduleCount >= MAX_SCHEDULES) break;
