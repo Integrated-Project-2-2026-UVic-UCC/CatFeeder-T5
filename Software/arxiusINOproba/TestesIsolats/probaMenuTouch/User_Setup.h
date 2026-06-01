@@ -8,9 +8,9 @@
 //   run without the need to make any more changes for a particular hardware setup!
 //   Note that some sketches are designed for a particular TFT pixel width/height
 
-#define USER_SETUP_INFO "ESP32 + ILI9488"
+#define USER_SETUP_INFO "ESP32 + ILI9341"
 
-#define ILI9488_DRIVER
+#define ILI9341_DRIVER
 
 #define TFT_MISO 19
 #define TFT_MOSI 23
