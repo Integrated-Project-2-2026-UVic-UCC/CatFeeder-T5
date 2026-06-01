@@ -28,7 +28,7 @@ TFT_eSPI tft = TFT_eSPI();
 #define CAT_BLINK_INTERVAL_MS   3000
 #define CORNER_HIT_ZONE_PX      70
 #define CORNER_TIMEOUT_MS       5000
-#define TOUCH_CAL_DATA          { 282, 3583, 263, 3445, 7 }
+#define TOUCH_CAL_DATA          { 501, 10, 484, 21, 7 }
 
 
 // ---------- Mocks i Dummies per poder compilar l'UI aïlladament -------------
