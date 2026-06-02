@@ -20,6 +20,12 @@
 //        T_IRQ -> leave disconnected (polled mode)
 //   3) Open the Serial monitor at 115200 baud and touch the screen.
 // ==========================================================================
+// DISABLED in the integrated firmware: this standalone tester declares its
+// own setup()/loop()/tft and would clash with CatFeeder.ino. Kept for
+// reference only — re-enable by removing the #if 0 / #endif guard and
+// compiling this sketch on its own.
+// ==========================================================================
+#if 0
 
 #include <SPI.h>
 #include <TFT_eSPI.h>
@@ -112,3 +118,5 @@ void loop() {
     }
   }
 }
+
+#endif // disabled standalone tester

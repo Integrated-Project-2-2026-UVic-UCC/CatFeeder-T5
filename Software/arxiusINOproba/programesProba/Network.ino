@@ -18,6 +18,11 @@
 
 static WiFiClientSecure netClient;
 
+// Defined in RTCManager.ino; declared here so the JsonArray& signature is
+// visible at the call site (Arduino auto-prototyping skips library types).
+void loadSchedules(JsonArray &arr);
+extern uint8_t scheduleCount;
+
 static const char* HDR_APIKEY = "apikey";
 static const char* HDR_AUTH   = "Authorization";
 
@@ -98,9 +103,20 @@ static int httpPATCH(const String& endpoint, const String& body) {
 //                             Protocol calls
 // ==========================================================================
 
+// Builds an ISO-8601 UTC timestamp from the DS3231. Falls back to "now"
+// (PostgREST accepts it for now()) when the RTC is unavailable.
+static String isoTimestamp() {
+  if (!telemetry.rtcOk) return String("now");
+  DateTime t = rtc.now();
+  char buf[32];
+  snprintf(buf, sizeof(buf), "%04u-%02u-%02uT%02u:%02u:%02uZ",
+           t.year(), t.month(), t.day(), t.hour(), t.minute(), t.second());
+  return String(buf);
+}
+
 // PATCH /rest/v1/devices?id=eq.<id>  { last_seen, status, fw }
 void sendHeartbeat() {
-  StaticJsonDocument<192> doc;
+  JsonDocument doc;
   doc["last_seen"]       = "now";
   doc["status"]          = cycle.active ? "dispensing" :
                            (currentState == STATE_ERROR ? "fault_motor" : "idle");
@@ -115,26 +131,44 @@ void sendHeartbeat() {
   }
 }
 
-// POST /rest/v1/realtime_weight  { device_id, grams, at }
-void pushRealtimeWeight(float grams) {
-  StaticJsonDocument<160> doc;
-  doc["device_id"] = DEVICE_ID;
-  doc["grams"]     = grams;
+// POST /rest/v1/realtime_weight  (upsert by device_id)
+//   { device_id, weight_g, dispensed_g, target_g, updated_at }
+void publishRealtimeWeight(float weightG, float dispensedG, float targetG) {
+  if (WiFi.status() != WL_CONNECTED) return;
+  JsonDocument doc;
+  doc["device_id"]   = DEVICE_ID;
+  doc["weight_g"]    = weightG;
+  doc["dispensed_g"] = dispensedG;
+  doc["target_g"]    = targetG;
+  doc["updated_at"]  = isoTimestamp();
   String body;
   serializeJson(doc, body);
-  httpPOST("/rest/v1/realtime_weight", body);
+
+  HTTPClient http;
+  http.begin(netClient, String(SUPABASE_URL) + "/rest/v1/realtime_weight");
+  applySupabaseHeaders(http);
+  http.addHeader("Prefer", "resolution=merge-duplicates"); // upsert
+  int code = http.POST(body);
+  http.end();
+  if (code < 200 || code >= 300) {
+    Serial.printf("[net] realtime_weight HTTP %d\n", code);
+  }
 }
 
-// POST /rest/v1/feed_events  (SRS §5.2.3)
-void logFeedEvent(const char* status, float dispensed) {
-  StaticJsonDocument<384> doc;
+// POST /rest/v1/feed_events
+//   { device_id, cat_id, target_grams, actual_grams, trigger_type,
+//     status, started_at }
+void logFeedEvent(const char *catId, float targetG, float actualG,
+                  const char *trigger, const char *status) {
+  JsonDocument doc;
   doc["device_id"]    = DEVICE_ID;
-  if (cycle.catId.length())      doc["cat_id"]      = cycle.catId;
-  if (cycle.scheduleId.length()) doc["schedule_id"] = cycle.scheduleId;
-  doc["trigger_type"] = cycle.trigger;
-  doc["target_grams"] = cycle.targetG;
-  doc["actual_grams"] = dispensed;
-  doc["status"]       = status;
+  if (catId && catId[0])              doc["cat_id"] = catId;       // null if absent
+  if (cycle.scheduleId.length())      doc["schedule_id"] = cycle.scheduleId;
+  doc["target_grams"] = targetG;
+  doc["actual_grams"] = actualG;
+  doc["trigger_type"] = trigger;     // "manual" or "scheduled"
+  doc["status"]       = status;      // "completed" or "error"
+  doc["started_at"]   = cycle.startedAtIso;
 
   String body;
   serializeJson(doc, body);
@@ -144,78 +178,74 @@ void logFeedEvent(const char* status, float dispensed) {
   }
 }
 
-// PATCH /rest/v1/commands?id=eq.<id>  { status }
-void updateCommandStatus(const String& id, const char* status) {
-  StaticJsonDocument<96> doc;
-  doc["status"] = status;
+// PATCH /rest/v1/commands?id=eq.<id>  { status, actual_grams }
+void updateCommandStatus(const String &cmdId, const char *status,
+                         float actualGrams) {
+  JsonDocument doc;
+  doc["status"]       = status;
+  doc["actual_grams"] = actualGrams;
   String body;
   serializeJson(doc, body);
-  String ep = "/rest/v1/commands?id=eq." + id;
+  String ep = "/rest/v1/commands?id=eq." + cmdId;
   httpPATCH(ep, body);
 }
 
 // --------------------------------------------------------------------------
-// GET /rest/v1/commands?device_id=eq.<id>&status=eq.pending&select=id,cat_id,portion_grams
+// GET /rest/v1/commands?device_id=eq.<id>&status=eq.pending
+//      &select=id,cat_id,portion_grams,trigger_type&limit=1
 void pollPendingCommands() {
-  if (cycle.active) return;    // ignore while dispensing
-
   String ep = "/rest/v1/commands?device_id=eq." DEVICE_ID
-              "&status=eq.pending&select=id,cat_id,portion_grams&limit=1";
+              "&status=eq.pending&select=id,cat_id,portion_grams,trigger_type"
+              "&limit=1";
   String payload;
   int code = httpGET(ep, payload);
   if (code != 200 || payload.length() < 3) return;   // no rows
 
-  StaticJsonDocument<512> doc;
+  JsonDocument doc;
   DeserializationError err = deserializeJson(doc, payload);
   if (err || !doc.is<JsonArray>() || doc.size() == 0) return;
 
+  // Only accept a command when the device is idle.
+  if (currentState != STATE_IDLE) return;
+
   JsonObject cmd   = doc[0];
-  String     id    = cmd["id"] | "";
-  String     cat   = cmd["cat_id"] | "";
+  String     id    = cmd["id"]            | "";
+  String     cat   = cmd["cat_id"]        | "";
   float      grams = cmd["portion_grams"] | DEFAULT_PORTION_G;
 
+  if (id.length() == 0) return;
+
   Serial.printf("[net] command %s, %.1f g\n", id.c_str(), grams);
+
+  // Claim the command before acting on it.
+  {
+    JsonDocument up;
+    up["status"] = "processing";
+    String body;
+    serializeJson(up, body);
+    httpPATCH("/rest/v1/commands?id=eq." + id, body);
+  }
+
   if (!startDispense(grams, "manual", id, cat, String(""))) {
-    updateCommandStatus(id, "error");
+    updateCommandStatus(id, "error", 0.0f);
   }
 }
 
-// GET /rest/v1/device_config?device_id=eq.<id>&select=schedules_json,calibration_factor
-// The schedules field is a JSON array like:
-//   [ { "id":"...", "cat_id":"...", "hour":8, "minute":30,
-//       "days_of_week":[1,2,3,4,5], "portion_grams":25, "enabled":true }, ... ]
+// GET /rest/v1/schedules?device_id=eq.<id>&enabled=eq.true
+//      &select=id,cat_id,time_of_day,days_of_week,portion_grams
 void pollDeviceConfig() {
-  String ep = "/rest/v1/device_config?device_id=eq." DEVICE_ID
-              "&select=schedules_json,calibration_factor&limit=1";
+  String ep = "/rest/v1/schedules?device_id=eq." DEVICE_ID
+              "&enabled=eq.true"
+              "&select=id,cat_id,time_of_day,days_of_week,portion_grams";
   String payload;
   int code = httpGET(ep, payload);
-  if (code != 200 || payload.length() < 3) return;
+  if (code != 200 || payload.length() < 2) return;
 
-  StaticJsonDocument<4096> doc;
+  JsonDocument doc;
   if (deserializeJson(doc, payload)) return;
-  if (!doc.is<JsonArray>() || doc.size() == 0) return;
+  if (!doc.is<JsonArray>()) return;
 
-  JsonArray sched = doc[0]["schedules_json"].as<JsonArray>();
-  scheduleClear();
-  for (JsonObject s : sched) {
-    if (scheduleCount >= MAX_SCHEDULES) break;
-    Schedule ns;
-    ns.enabled  = s["enabled"]      | true;
-    ns.hour     = s["hour"]         | 0;
-    ns.minute   = s["minute"]       | 0;
-    ns.portionG = s["portion_grams"]| DEFAULT_PORTION_G;
-    ns.catId    = String((const char*)(s["cat_id"] | ""));
-    ns.id       = String((const char*)(s["id"]     | ""));
-    ns.lastFiredYday = 0;
-
-    ns.daysMask = 0;
-    JsonArray days = s["days_of_week"].as<JsonArray>();
-    if (days.isNull() || days.size() == 0) {
-      ns.daysMask = 0x7F;               // every day by default
-    } else {
-      for (int d : days) ns.daysMask |= (1 << (d & 0x07));
-    }
-    scheduleAdd(ns);
-  }
-  Serial.printf("[net] device_config: %u schedules\n", scheduleCount);
+  JsonArray arr = doc.as<JsonArray>();
+  loadSchedules(arr);   // implemented in RTCManager.ino
+  Serial.printf("[net] schedules loaded: %u\n", scheduleCount);
 }

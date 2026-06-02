@@ -53,7 +53,7 @@ void scaleCalibrate(float knownWeightG) {
   Serial.println(F("[scale] calibrating..."));
   scale.set_scale();                   // factor = 1
   delay(500);
-  long raw = scale.get_average(20);
+  long raw = scale.read_average(20);
   float newFactor = (float)raw / knownWeightG;
   scale.set_scale(newFactor);
   Serial.printf("[scale] new calibration factor = %.2f\n", newFactor);

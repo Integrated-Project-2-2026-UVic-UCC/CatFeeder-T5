@@ -6,18 +6,8 @@
 // keeps working when the network is down (SRS §REQ-NF-10).
 // ==========================================================================
 
-#define MAX_SCHEDULES 16
-
-struct Schedule {
-  bool     enabled;
-  uint8_t  hour;
-  uint8_t  minute;
-  uint8_t  daysMask;       // bit 0 = Sunday ... bit 6 = Saturday; 0x7F = every day
-  float    portionG;
-  String   catId;
-  String   id;
-  uint16_t lastFiredYday;  // day-of-year of the last firing (avoids double-fire)
-};
+#include <ArduinoJson.h>
+#include "schedules.h"   // Schedule struct + MAX_SCHEDULES
 
 Schedule schedules[MAX_SCHEDULES];
 uint8_t  scheduleCount = 0;
@@ -50,12 +40,50 @@ void scheduleAdd(const Schedule& s) {
 }
 
 // --------------------------------------------------------------------------
+// Rehydrate the in-memory schedule list from a Supabase `schedules` array:
+//   [ { "id":..,"cat_id":..,"time_of_day":"HH:MM:SS",
+//       "days_of_week":[0..6],"portion_grams":25 }, ... ]
+// days_of_week ints follow DS3231 dayOfTheWeek(): 0=Sun .. 6=Sat.
+void loadSchedules(JsonArray& arr) {
+  scheduleClear();
+  for (JsonObject s : arr) {
+    if (scheduleCount >= MAX_SCHEDULES) break;
+
+    Schedule ns;
+    ns.enabled  = true;            // query already filtered enabled=true
+    ns.portionG = s["portion_grams"] | DEFAULT_PORTION_G;
+    ns.catId    = String((const char *)(s["cat_id"] | ""));
+    ns.id       = String((const char *)(s["id"]     | ""));
+    ns.lastFiredYday = 0;
+
+    // Parse "HH:MM:SS" -> hour, minute.
+    const char *tod = s["time_of_day"] | "00:00:00";
+    int hh = 0, mm = 0;
+    sscanf(tod, "%d:%d", &hh, &mm);
+    ns.hour   = (uint8_t)constrain(hh, 0, 23);
+    ns.minute = (uint8_t)constrain(mm, 0, 59);
+
+    // Parse days_of_week int[] -> bitmask (bit d, 0=Sun .. 6=Sat).
+    ns.daysMask = 0;
+    JsonArray days = s["days_of_week"].as<JsonArray>();
+    if (days.isNull() || days.size() == 0) {
+      ns.daysMask = 0x7F; // every day by default
+    } else {
+      for (int d : days) ns.daysMask |= (1 << (d & 0x07));
+    }
+
+    scheduleAdd(ns);
+  }
+}
+
+// --------------------------------------------------------------------------
 // Called from STATE_IDLE once per loop. Iterates through the cached list
 // and triggers at most one feed per schedule per day.
 void checkScheduledFeeds() {
-  if (!telemetry.rtcOk)        return;
-  if (scheduleCount == 0)      return;
-  if (cycle.active)            return;
+  if (!telemetry.rtcOk)              return;
+  if (uiRequestedMode != UI_MODE_AUTO) return;  // only feed on schedule in AUTO mode
+  if (scheduleCount == 0)           return;
+  if (cycle.active)                 return;
 
   DateTime now = rtc.now();
   uint16_t yday = (uint16_t)now.year() * 400 +

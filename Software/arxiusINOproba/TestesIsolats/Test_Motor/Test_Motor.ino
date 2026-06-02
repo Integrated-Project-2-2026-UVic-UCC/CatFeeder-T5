@@ -23,7 +23,7 @@
 #define DIRECCIO_RETROCES  HIGH  // Direcció de desblocatge de seguretat
 
 // Velocitat del Motor (Retard de Pas en microsegons)
-#define STEP_DELAY_US     4000  
+#define STEP_DELAY_US     1000  
 #define STEP_JAM_DELAY_US  600   // Velocitat més ràpida per a la maniobra de desblocatge
 
 // Variable d'estat

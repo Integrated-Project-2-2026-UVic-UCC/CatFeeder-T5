@@ -2,8 +2,8 @@
 // Integrated Project II — GR15 [GEMEC-09UV]  Universitat de Vic — UCC
 // ==========================================================================
 // This sketch coordinates every physical subsystem of the automatic cat
-// feeder: stepper dispenser, load cell (HX711), DHT22, DS3231 RTC, ILI9488
-// display (output-only), local buttons and the Supabase cloud link.
+// feeder: stepper dispenser, load cell (HX711), DHT22, DS3231 RTC, ILI9341
+// touch display (touch-only UI) and the Supabase cloud link.
 //
 // The main loop is strictly non-blocking: all periodic tasks are driven by
 // millis() timers and the stepper is stepped via AccelStepper::run().
@@ -17,10 +17,15 @@
 #include <Wire.h>
 
 #include <AccelStepper.h>
+#include <ArduinoJson.h>
 #include <DHT.h>
 #include <HX711.h>
 #include <RTClib.h>
 #include <TFT_eSPI.h>
+
+// Shared types referenced by auto-generated prototypes that the IDE hoists to
+// the top of this (first) tab — must be visible here.
+#include "schedules.h"
 
 // ---------- Global peripheral objects (used from every *.ino tab) ----------
 TFT_eSPI tft = TFT_eSPI();
@@ -58,14 +63,25 @@ struct FeedingCycle {
   float baselineG; // tray weight at the moment the cycle starts
   uint32_t startMs;
   uint32_t lastPublishMs;
-  const char *trigger; // "manual" or "scheduled"
-  String commandId;    // Supabase commands.id (empty for scheduled)
-  String catId;        // cat UUID
-  String scheduleId;   // schedule UUID (empty for manual)
-} cycle = {false, 0, 0, 0, 0, 0, "manual", "", "", ""};
+  const char *trigger;   // "manual" or "scheduled"
+  String commandId;      // Supabase commands.id (empty for scheduled)
+  String catId;          // cat UUID
+  String scheduleId;     // schedule UUID (empty for manual)
+  String startedAtIso;   // ISO-8601 timestamp captured at cycle start
+} cycle = {false, 0, 0, 0, 0, 0, "manual", "", "", "", ""};
 
-// Display screen currently visible (rotated by BTN_MENU).
+// Display screen currently visible (display phase will use this).
 uint8_t activeScreen = 0; // 0 = dashboard, 1 = sensors, 2 = network
+
+// ---- Cross-tab touch state (defined in TouchInput.ino) -------------------
+extern UIMode   uiRequestedMode;
+extern bool     uiManualFeedActive;
+extern bool     touchDetected;
+extern uint16_t touchX;
+extern uint16_t touchY;
+
+// ---- Cross-tab schedule state (defined in RTCManager.ino) ----------------
+extern uint8_t  scheduleCount;
 
 // Periodic-task timers.
 static uint32_t tLastSensors = 0;
@@ -86,11 +102,7 @@ void setup() {
   Serial.println(F("  CatFeeder — firmware " FW_VERSION));
   Serial.println(F("========================================"));
 
-  // --- Button / switch I/O --------------------------------------------------
-  pinMode(BTN_FEED, INPUT_PULLUP);
-  pinMode(BTN_TARE, INPUT_PULLUP);
-  pinMode(BTN_MENU, INPUT);        // Ext pull-up required (pin 34)
-  pinMode(SQUISHY_PIN, INPUT);     // Ext pull-up required (pin 35)
+  // No physical buttons on this hardware — the UI is touch-only.
 
   // --- Stepper driver off until we really need it ---------------------------
   pinMode(STEPPER_EN, OUTPUT);
@@ -106,6 +118,7 @@ void setup() {
   sensorsInit();
   motorInit();
   networkInit();
+  touchInputInit();
 
   currentState = STATE_IDLE;
   displaySplash("Ready");
@@ -123,38 +136,53 @@ void loop() {
   // 1) Always step the motor first — AccelStepper is cooperative.
   stepper.run();
 
-  // 2) Inputs (debounced).
-  readButtons();
-  handleButtonEvents();
+  // 2) Touch input (read only; no rendering yet).
+  touchInputUpdate();
 
-  // 3) State machine.
+  // 3) Manual-feed request from the touch panel.
+  if (uiRequestedMode == UI_MODE_MANUAL) {
+    if (uiManualFeedActive && currentState == STATE_IDLE) {
+      startDispense(DEFAULT_PORTION_G, "manual", String(""), String(""), String(""));
+    }
+  }
+
+  // 4) State machine.
   switch (currentState) {
   case STATE_IDLE:
-    checkScheduledFeeds();
+    if (uiRequestedMode == UI_MODE_AUTO) {
+      checkScheduledFeeds();
+    }
     break;
   case STATE_DISPENSING:
     runDispensingCycle();
+    if (now - cycle.lastPublishMs >= REALTIME_WEIGHT_INTERVAL_MS) {
+      cycle.lastPublishMs = now;
+      if (telemetry.wifiUp) {
+        publishRealtimeWeight(telemetry.weightG, cycle.dispensedG, cycle.targetG);
+      }
+    }
     break;
   case STATE_ERROR:
-    // Stay here until the user acknowledges with BTN_MENU.
+    // Touch anywhere to acknowledge and clear the error.
+    if (touchDetected) clearError();
     break;
   default:
     break;
   }
 
-  // 4) Periodic sensor sampling.
+  // 5) Periodic sensor sampling.
   if (now - tLastSensors >= TELEMETRY_INTERVAL_MS) {
     tLastSensors = now;
     updateSensors();
   }
 
-  // 5) Display refresh.
+  // 6) Display refresh (no-op until the display phase).
   if (now - tLastDisplay >= DISPLAY_REFRESH_MS) {
     tLastDisplay = now;
     displayUpdate();
   }
 
-  // 6) Network-bound tasks (skip cleanly when offline).
+  // 7) Network-bound tasks (skip cleanly when offline).
   if (WiFi.status() == WL_CONNECTED) {
     telemetry.wifiUp = true;
     if (now - tLastCmdPoll >= COMMAND_POLL_INTERVAL_MS) {
@@ -206,11 +234,17 @@ void cycleFinish(const char *status, float dispensed) {
   cycle.active = false;
   cycle.dispensedG = dispensed;
   motorEnable(false);
-  logFeedEvent(status, dispensed);
-  if (cycle.commandId.length() > 0) {
-    updateCommandStatus(cycle.commandId, status);
-    cycle.commandId = "";
+
+  // Log to Supabase only if we have connectivity.
+  if (telemetry.wifiUp) {
+    logFeedEvent(cycle.catId.c_str(), cycle.targetG, dispensed,
+                 cycle.trigger, status);
+    if (cycle.commandId.length() > 0) {
+      updateCommandStatus(cycle.commandId, status, dispensed);
+      cycle.commandId = "";
+    }
   }
+
   currentState = STATE_IDLE;
-  Serial.printf("[cycle] finished: %s, %.1f g\n", status, dispensed);
+  Serial.printf("[cycle] %s — %.1fg dispensed\n", status, dispensed);
 }
