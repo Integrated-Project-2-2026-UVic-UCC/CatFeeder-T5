@@ -46,24 +46,14 @@ This automatic cat feeder project can be built using several 3D printed parts. T
 
 Suggested 3D printed parts:
 
-| Part | Description | Notes |
+| Part | Description | Material |
 |---|---|---|
-| Main body | Main structure of the feeder | Holds the container and electronics |
-| Food hopper | Stores dry cat food | Should be smooth inside to avoid clogging |
-| Dispensing wheel / screw | Controls the amount of food dispensed | Can be adapted for different kibble sizes |
-| Bowl support | Holds the food bowl in place | Optional but recommended |
-| Electronics cover | Protects the microcontroller and wiring | Should allow ventilation |
-| Motor mount | Holds the motor in the correct position | Depends on the selected motor |
-
-Recommended printing settings:
-
-| Part | Infill | Layer height | Material |
-|---|---:|---:|---|
-| Main body | 25–35% | 0.20 mm | PLA / PETG |
-| Food hopper | 20–30% | 0.20 mm | PETG recommended |
-| Dispensing wheel | 40–60% | 0.12–0.20 mm | PETG recommended |
-| Motor mount | 40–60% | 0.15–0.20 mm | PETG / ABS |
-| Electronics cover | 20% | 0.20 mm | PLA / PETG |
+| Main body | Main structure of the feeder | PLA |
+| Food hopper | Stores dry cat food | PLA |
+| Dispensing wheel / screw | Controls the amount of food dispensed | PLA |
+| Bowl support | Holds the food bowl in place | PLA |
+| Electronics cover | Protects the microcontroller and wiring | PLA |
+| Motor mount | Holds the motor in the correct position | PLA |
 
 > **Beware:** The dispensing system must be tested with the real cat food that will be used. Different kibble sizes can cause jams or inaccurate portions.
 
@@ -73,7 +63,7 @@ Recommended printing settings:
 
 | Image | Component | Description | Quantity | Notes |
 |---|---|---|---:|---|
-| <img src="./images/m3-screw.jpg" width="90"> | M3 screws | General assembly screws | 10–20 pcs | Length depends on printed parts |
+| <img src="./images/m3-screw.jpg" width="90"> | M4 screws | General assembly screws | 10–20 pcs | Length depends on printed parts |
 | <img src="./images/threaded-inserts.jpg" width="90"> | Threaded inserts | Metal inserts for stronger screw mounting | Optional | Recommended for repeated disassembly |
 
 ---
