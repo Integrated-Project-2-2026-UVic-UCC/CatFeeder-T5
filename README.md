@@ -74,7 +74,6 @@ Recommended printing settings:
 | Image | Component | Description | Quantity | Notes |
 |---|---|---|---:|---|
 | <img src="./images/m3-screw.jpg" width="90"> | M3 screws | General assembly screws | 10–20 pcs | Length depends on printed parts |
-| <img src="./images/m3-nuts.jpg" width="90"> | M3 nuts | Nuts for mechanical assembly | 10–20 pcs | Optional if using threaded inserts |
 | <img src="./images/threaded-inserts.jpg" width="90"> | Threaded inserts | Metal inserts for stronger screw mounting | Optional | Recommended for repeated disassembly |
 
 ---
