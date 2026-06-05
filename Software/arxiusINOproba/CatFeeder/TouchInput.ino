@@ -34,7 +34,7 @@ void touchInputInit() {
 
   // Default calibration { xMin, xMax, yMin, yMax, rotationFlag }.
   // Re-run the TFT_eSPI Touch_calibrate example for pixel-accurate values.
-  uint16_t calData[5] = {300, 3600, 300, 3600, 7};
+  uint16_t calData[5] = { 701, 551, 491, 197, 4 };
   tft.setTouch(calData);
 
   Serial.println(F("[touch] XPT2046 input ready"));

@@ -9,7 +9,6 @@
 //   hardware setup! Note that some sketches are designed for a particular TFT
 //   pixel width/height
 
-#define USER_SETUP_INFO "ESP32 + ILI9341_DRIVER"
 
 #define ILI9341_DRIVER
 
@@ -20,13 +19,11 @@
 #define TFT_DC 22
 #define TFT_RST 4
 
-// #define TFT_BL   32
-#define TFT_BACKLIGHT_ON HIGH
 
 #define TOUCH_CS 21
 
 #define SPI_FREQUENCY 27000000
-#define SPI_READ_FREQUENCY 20000000
+#define SPI_READ_FREQUENCY 60000000
 #define SPI_TOUCH_FREQUENCY 2500000
 
 // --- Fonts a carregar (ocupen memòria FLASH, les mantenim totes per la UI) ---

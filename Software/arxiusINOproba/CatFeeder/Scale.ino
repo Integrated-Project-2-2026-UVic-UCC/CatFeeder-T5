@@ -9,11 +9,18 @@
 
 void scaleInit() {
   scale.begin(HX711_DT, HX711_SCK);
-  delay(50);
+
+  // HX711 can take up to 400 ms to power up, especially when SPI peripherals
+  // initialise first.  We try twice before giving up.
+  uint32_t t0 = millis();
+  while (!scale.is_ready() && millis() - t0 < 1500) {
+    delay(50);
+  }
 
   if (!scale.is_ready()) {
-    Serial.println(F("[scale] HX711 not responding — check wiring"));
-    goToError("Scale not found");
+    Serial.println(F("[scale] HX711 not responding — check wiring (continuing)"));
+    // Non-fatal: the device can still receive and log commands;
+    // gravimetric dispensing will be skipped.
     return;
   }
 

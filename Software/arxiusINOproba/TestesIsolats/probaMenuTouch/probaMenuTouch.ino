@@ -1,6 +1,5 @@
 // ==========================================================================
 // probaMenuTouch.ino — Sketch per provar la UI tàctil per separat
-// Basat en READMEpantallatàctil.md i MenuSpecifications.md
 // ==========================================================================
 
 #include <TFT_eSPI.h>
@@ -10,7 +9,7 @@ TFT_eSPI tft = TFT_eSPI();
 
 // --- Orientació i resolució ---
 #define SCREEN_W                320
-#define SCREEN_H                280
+#define SCREEN_H                240
 
 // --- Colors UI (RGB565) ---
 #define UI_COL_BG               0x0820
@@ -28,8 +27,9 @@ TFT_eSPI tft = TFT_eSPI();
 #define CAT_BLINK_INTERVAL_MS   3000
 #define CORNER_HIT_ZONE_PX      70
 #define CORNER_TIMEOUT_MS       5000
-#define TOUCH_CAL_DATA          { 501, 10, 484, 21, 7 }
 
+// Mantinc el calibration data que et detectava el toc
+#define TOUCH_CAL_DATA          { 282, 3583, 263, 3445, 7 }
 
 // ---------- Mocks i Dummies per poder compilar l'UI aïlladament -------------
 struct Telemetry {
@@ -80,7 +80,6 @@ void cycleFinish(String status, float amount) {
   currentState = STATE_IDLE;
   Serial.println(F("[mock] cycleFinish cridat"));
 }
-// ----------------------------------------------------------------------------
 
 // ---------- Estat de la UI ------------------------------------------------
 enum UIScreen {
@@ -91,7 +90,6 @@ enum UIScreen {
   UI_SCREEN_AUTO_MODE
 };
 
-// Modes de funcionament
 enum UIMode {
   UI_MODE_MANUAL,
   UI_MODE_AUTO
@@ -115,7 +113,7 @@ static uint32_t firstCornerMs = 0;
 
 static uint16_t touchCalData[5] = TOUCH_CAL_DATA;
 
-// ---------- Prototypes internes -------------------------------------------
+// ---------- Prototypes interns -------------------------------------------
 static void drawScreensaver();
 static void drawUnlockScreen();
 static void drawMainMenu();
@@ -144,7 +142,9 @@ void touchUIUpdate() {
   uint16_t tx = 0, ty = 0;
   bool touched = getTouchPoint(tx, ty);
 
-  if (touched) lastTouchMs = now;
+  if (touched) {
+    lastTouchMs = now;
+  }
 
   switch (activeUIScreen) {
     case UI_SCREEN_SCREENSAVER:
@@ -153,27 +153,34 @@ void touchUIUpdate() {
         eyesOpen = !eyesOpen;
         drawCatFace(SCREEN_W / 2, SCREEN_H / 2, !eyesOpen);
       }
+
       if (touched) {
         transitionTo(UI_SCREEN_UNLOCK);
       }
       break;
 
     case UI_SCREEN_UNLOCK:
+      // Primer comprovem si ha caducat el temps del patró
+      if (cornerHitCount > 0 &&
+          CORNER_TIMEOUT_MS > 0 &&
+          (now - firstCornerMs) > CORNER_TIMEOUT_MS) {
+        resetUnlockPattern();
+        screenDirty = true;
+        drawUnlockScreen();
+        break;
+      }
+
       if (touched) {
         bool patternComplete = checkCornerTouch(tx, ty);
         screenDirty = true;
         drawUnlockScreen();
+
         if (patternComplete) {
           delay(300);
           transitionTo(UI_SCREEN_MAIN);
         }
-        if (cornerHitCount > 0 &&
-            CORNER_TIMEOUT_MS > 0 &&
-            (now - firstCornerMs) > CORNER_TIMEOUT_MS) {
-          resetUnlockPattern();
-          screenDirty = true;
-        }
       }
+
       if (now - lastTouchMs > UI_IDLE_TIMEOUT_MS) {
         transitionTo(UI_SCREEN_SCREENSAVER);
       }
@@ -183,11 +190,18 @@ void touchUIUpdate() {
       if (touched) {
         handleMainMenuTouch(tx, ty);
       }
+
       if (now - lastTouchMs > UI_IDLE_TIMEOUT_MS) {
         transitionTo(UI_SCREEN_SCREENSAVER);
       }
-      if (now % 1000 < 60) screenDirty = true;
-      if (screenDirty) drawMainMenu();
+
+      if (now % 1000 < 60) {
+        screenDirty = true;
+      }
+
+      if (screenDirty) {
+        drawMainMenu();
+      }
       break;
 
     case UI_SCREEN_MANUAL_FEED:
@@ -195,8 +209,14 @@ void touchUIUpdate() {
         handleManualFeedTouch(tx, ty);
         lastTouchMs = now;
       }
-      if (now % 250 < 60) screenDirty = true;
-      if (screenDirty) drawManualFeedScreen();
+
+      if (now % 250 < 60) {
+        screenDirty = true;
+      }
+
+      if (screenDirty) {
+        drawManualFeedScreen();
+      }
       break;
 
     case UI_SCREEN_AUTO_MODE:
@@ -204,11 +224,18 @@ void touchUIUpdate() {
         handleAutoModeTouch(tx, ty);
         lastTouchMs = now;
       }
+
       if (now - lastTouchMs > UI_IDLE_TIMEOUT_MS) {
         transitionTo(UI_SCREEN_SCREENSAVER);
       }
-      if (now % 1000 < 60) screenDirty = true;
-      if (screenDirty) drawAutoModeScreen();
+
+      if (now % 1000 < 60) {
+        screenDirty = true;
+      }
+
+      if (screenDirty) {
+        drawAutoModeScreen();
+      }
       break;
   }
 }
@@ -217,18 +244,36 @@ static void transitionTo(UIScreen next) {
   if (activeUIScreen == UI_SCREEN_MANUAL_FEED) {
     uiManualFeedActive = false;
   }
+
   activeUIScreen = next;
   screenDirty    = true;
   eyesOpen       = true;
+
   tft.fillScreen(UI_COL_BG);
 
   switch (next) {
-    case UI_SCREEN_SCREENSAVER: drawScreensaver(); break;
-    case UI_SCREEN_UNLOCK:      resetUnlockPattern(); drawUnlockScreen(); break;
-    case UI_SCREEN_MAIN:        drawMainMenu(); break;
-    case UI_SCREEN_MANUAL_FEED: drawManualFeedScreen(); break;
-    case UI_SCREEN_AUTO_MODE:   drawAutoModeScreen(); break;
+    case UI_SCREEN_SCREENSAVER:
+      drawScreensaver();
+      break;
+
+    case UI_SCREEN_UNLOCK:
+      resetUnlockPattern();
+      drawUnlockScreen();
+      break;
+
+    case UI_SCREEN_MAIN:
+      drawMainMenu();
+      break;
+
+    case UI_SCREEN_MANUAL_FEED:
+      drawManualFeedScreen();
+      break;
+
+    case UI_SCREEN_AUTO_MODE:
+      drawAutoModeScreen();
+      break;
   }
+
   screenDirty = false;
 }
 
@@ -265,8 +310,6 @@ static void drawCatFace(int cx, int cy, bool blinkNow) {
     tft.drawLine(cx - 54, cy - 35, cx - 27, cy - 27, C);
     tft.drawLine(cx + 26, cy - 35, cx + 53, cy - 44, C);
     tft.drawLine(cx + 26, cy - 35, cx + 53, cy - 27, C);
-    tft.drawLine(cx - 54, cy - 35, cx - 54, cy - 35, C);
-    tft.drawLine(cx + 53, cy - 35, cx + 53, cy - 35, C);
     tft.fillRect(cx - 44, cy - 40, 8, 12, C);
     tft.fillRect(cx + 36, cy - 40, 8, 12, C);
   } else {
@@ -292,57 +335,42 @@ static void drawUnlockScreen() {
   if (screenDirty) {
     tft.fillScreen(UI_COL_BG);
   }
+
   tft.setTextDatum(TC_DATUM);
   tft.setTextColor(UI_COL_TEXT, UI_COL_BG);
   tft.setTextSize(2);
   tft.drawString("Desbloqueig de seguretat", SCREEN_W / 2, 12);
+
   tft.setTextSize(1);
   tft.setTextColor(UI_COL_MUTED, UI_COL_BG);
-  tft.drawString("Toca TR i BR alternant: TR > BR > TR > BR", SCREEN_W / 2, 38);
+  tft.drawString("Toca les 4 cantonades en ordre: TL > TR > BL > BR", SCREEN_W / 2, 38);
 
   int z = CORNER_HIT_ZONE_PX;
-  
-  // Dibuixem només les cantonades de la dreta (TR i BR) ja que el cantó esquerre és defectuós
-  int xs[2] = {SCREEN_W - z, SCREEN_W - z};
-  int ys[2] = {0, SCREEN_H - z};
-  const char* labels[2] = {"TR", "BR"};
-  
-  // Indiquem quina cantonada és la següent en la seqüència
-  bool expectedTR = (cornerHitCount == 0 || cornerHitCount == 2) && (cornerHitCount < 4);
-  bool expectedBR = (cornerHitCount == 1 || cornerHitCount == 3) && (cornerHitCount < 4);
-  bool expected[2] = {expectedTR, expectedBR};
 
-  for (int i = 0; i < 2; i++) {
-    uint16_t col = expected[i] ? UI_COL_ACCENT : UI_COL_CARD;
+  int xs[4] = {0, SCREEN_W - z, 0, SCREEN_W - z};
+  int ys[4] = {0, 0, SCREEN_H - z, SCREEN_H - z};
+
+  const char* labels[4] = {"TL", "TR", "BL", "BR"};
+
+  for (int i = 0; i < 4; i++) {
+    uint16_t col = cornerHit[i] ? UI_COL_OK : UI_COL_CARD;
+
     tft.fillRect(xs[i], ys[i], z, z, col);
-    tft.drawRect(xs[i], ys[i], z, z, expected[i] ? UI_COL_TEXT : UI_COL_MUTED);
+    tft.drawRect(xs[i], ys[i], z, z, UI_COL_MUTED);
+
     tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(expected[i] ? UI_COL_BG : UI_COL_MUTED, col);
+    tft.setTextColor(cornerHit[i] ? UI_COL_BG : UI_COL_MUTED, col);
     tft.setTextSize(2);
-    tft.drawString(labels[i], xs[i] + z/2, ys[i] + z/2);
+    tft.drawString(labels[i], xs[i] + z / 2, ys[i] + z / 2);
   }
 
-  // Text de progrés al centre
   char buf[24];
   snprintf(buf, sizeof(buf), "%u / 4", cornerHitCount);
+
   tft.setTextDatum(MC_DATUM);
   tft.setTextColor(UI_COL_ACCENT, UI_COL_BG);
   tft.setTextSize(3);
-  tft.drawString(buf, SCREEN_W / 2, SCREEN_H / 2 - 10);
-
-  // Dibuixem els 4 indicadors de pas (punts/barres de progrés) per sota del text de progrés
-  int dotY = SCREEN_H / 2 + 25;
-  int dotW = 20;
-  int dotH = 10;
-  int gap = 10;
-  int totalWidth = (4 * dotW) + (3 * gap);
-  int startX = (SCREEN_W - totalWidth) / 2;
-  
-  for (int i = 0; i < 4; i++) {
-    uint16_t col = (cornerHitCount > i) ? UI_COL_OK : UI_COL_CARD;
-    tft.fillRect(startX + i * (dotW + gap), dotY, dotW, dotH, col);
-    tft.drawRect(startX + i * (dotW + gap), dotY, dotW, dotH, UI_COL_MUTED);
-  }
+  tft.drawString(buf, SCREEN_W / 2, SCREEN_H / 2);
 
   tft.setTextDatum(TL_DATUM);
   screenDirty = false;
@@ -350,31 +378,54 @@ static void drawUnlockScreen() {
 
 static bool checkCornerTouch(uint16_t tx, uint16_t ty) {
   int z = CORNER_HIT_ZONE_PX;
-  struct Zone { int x, y; };
-  
-  // Nou patró alternat que només utilitza les cantonades funcionals de la dreta: TR, BR, TR, BR
-  Zone zones[4] = {
-    {SCREEN_W-z,  0},           // Pas 0: TR
-    {SCREEN_W-z,  SCREEN_H-z},  // Pas 1: BR
-    {SCREEN_W-z,  0},           // Pas 2: TR
-    {SCREEN_W-z,  SCREEN_H-z}   // Pas 3: BR
+
+  struct Zone {
+    int x;
+    int y;
   };
-  const char* names[4] = {"TR","BR","TR","BR"};
+
+  Zone zones[4] = {
+    {0,            0},
+    {SCREEN_W - z, 0},
+    {0,            SCREEN_H - z},
+    {SCREEN_W - z, SCREEN_H - z}
+  };
+
+  const char* names[4] = {"TL", "TR", "BL", "BR"};
 
   uint8_t expected = cornerHitCount;
-  if (expected >= CORNER_COUNT) return false;
 
-  Zone &z2 = zones[expected];
-  // DEBUG: mostra on cau el toc i quina zona s'espera
-  Serial.printf("[check] toc px=(%u,%u)  esperat=%s zona x=%d..%d y=%d..%d\n",
-                tx, ty, names[expected],
-                z2.x, z2.x+z, z2.y, z2.y+z);
+  if (expected >= CORNER_COUNT) {
+    return false;
+  }
 
-  if (tx >= z2.x && tx < z2.x + z && ty >= z2.y && ty < z2.y + z) {
-    if (cornerHitCount == 0) firstCornerMs = millis();
+  Zone &expectedZone = zones[expected];
+
+  Serial.printf(
+    "[check] toc px=(%u,%u)  esperat=%s zona x=%d..%d y=%d..%d\n",
+    tx,
+    ty,
+    names[expected],
+    expectedZone.x,
+    expectedZone.x + z,
+    expectedZone.y,
+    expectedZone.y + z
+  );
+
+  if (tx >= expectedZone.x &&
+      tx < expectedZone.x + z &&
+      ty >= expectedZone.y &&
+      ty < expectedZone.y + z) {
+
+    if (cornerHitCount == 0) {
+      firstCornerMs = millis();
+    }
+
     cornerHit[expected] = true;
     cornerHitCount++;
+
     Serial.printf("[unlock] corner %u (%s) HIT!\n", expected, names[expected]);
+
     if (cornerHitCount == CORNER_COUNT) {
       Serial.println(F("[unlock] pattern complet!"));
       return true;
@@ -382,17 +433,22 @@ static bool checkCornerTouch(uint16_t tx, uint16_t ty) {
   } else {
     Serial.println(F("[unlock] fora de zona"));
   }
+
   return false;
 }
 
 static void resetUnlockPattern() {
-  for (int i = 0; i < CORNER_COUNT; i++) cornerHit[i] = false;
+  for (int i = 0; i < CORNER_COUNT; i++) {
+    cornerHit[i] = false;
+  }
+
   cornerHitCount = 0;
   firstCornerMs  = 0;
 }
 
 static void drawMainMenu() {
   tft.fillRect(0, 0, SCREEN_W, 40, UI_COL_CARD);
+
   tft.setTextDatum(ML_DATUM);
   tft.setTextColor(UI_COL_ACCENT, UI_COL_CARD);
   tft.setTextSize(2);
@@ -400,42 +456,50 @@ static void drawMainMenu() {
 
   tft.setTextDatum(MC_DATUM);
   tft.setTextColor(uiRequestedMode == UI_MODE_AUTO ? UI_COL_OK : UI_COL_WARN, UI_COL_CARD);
-  tft.setTextSize(1);
   tft.drawString(uiRequestedMode == UI_MODE_AUTO ? "Mode: AUTO" : "Mode: MANUAL", SCREEN_W / 2, 20);
 
   tft.setTextDatum(MR_DATUM);
   tft.setTextColor(UI_COL_TEXT, UI_COL_CARD);
-  tft.setTextSize(1);
+
   char tbuf[12];
+
   if (telemetry.rtcOk) {
     DateTime now = rtc.now();
     snprintf(tbuf, sizeof(tbuf), "%02u:%02u:%02u", now.hour(), now.minute(), now.second());
   } else {
     snprintf(tbuf, sizeof(tbuf), "--:--:--");
   }
+
   tft.drawString(tbuf, SCREEN_W - 10, 20);
 
-  int bw = 150, bh = 195, by = 45;
-  int bx2 = 164, bw2 = 150;
+  int bw = 230;
+  int bh = 230;
+  int by = 45;
+
   bool isManual = (uiRequestedMode == UI_MODE_MANUAL);
   uint16_t colManual = isManual ? UI_COL_ACCENT : UI_COL_CARD;
 
-  tft.fillRect(6, by, bw, bh, colManual);
-  tft.drawRect(6, by, bw, bh, isManual ? UI_COL_TEXT : UI_COL_MUTED);
+  tft.fillRect(5, by, bw, bh, colManual);
+  tft.drawRect(5, by, bw, bh, isManual ? UI_COL_TEXT : UI_COL_MUTED);
 
   tft.setTextDatum(TC_DATUM);
   tft.setTextColor(isManual ? UI_COL_BG : UI_COL_TEXT, colManual);
   tft.setTextSize(3);
-  tft.drawString("MANUAL", 6 + bw/2, by + 45);
+  tft.drawString("MANUAL", 5 + bw / 2, by + 60);
+
   tft.setTextSize(1);
-  tft.drawString("Dispensar ara", 6 + bw/2, by + 85);
-  tft.drawString("Premer el boto per", 6 + bw/2, by + 98);
-  tft.drawString("controlar el motor.", 6 + bw/2, by + 111);
+  tft.drawString("Dispensar ara", 5 + bw / 2, by + 110);
+  tft.drawString("Premer el boto per", 5 + bw / 2, by + 126);
+  tft.drawString("controlar el motor.", 5 + bw / 2, by + 142);
+
   if (isManual) {
     tft.setTextSize(2);
     tft.setTextColor(UI_COL_BG, colManual);
-    tft.drawString("ACTIU", 6 + bw/2, by + 145);
+    tft.drawString("ACTIU", 5 + bw / 2, by + 175);
   }
+
+  int bx2 = 245;
+  int bw2 = SCREEN_W - bx2 - 5;
 
   bool isAuto = (uiRequestedMode == UI_MODE_AUTO);
   uint16_t colAuto = isAuto ? UI_COL_OK : UI_COL_CARD;
@@ -446,21 +510,31 @@ static void drawMainMenu() {
   tft.setTextDatum(TC_DATUM);
   tft.setTextColor(isAuto ? UI_COL_BG : UI_COL_TEXT, colAuto);
   tft.setTextSize(3);
-  tft.drawString("AUTO", bx2 + bw2/2, by + 45);
+  tft.drawString("AUTO", bx2 + bw2 / 2, by + 60);
+
   tft.setTextSize(1);
-  tft.drawString("Seguir horaris", bx2 + bw2/2, by + 85);
-  tft.drawString("configurats a Supabase.", bx2 + bw2/2, by + 98);
+  tft.drawString("Seguir horaris", bx2 + bw2 / 2, by + 110);
+  tft.drawString("configurats a Supabase.", bx2 + bw2 / 2, by + 126);
+
   if (isAuto) {
     tft.setTextSize(2);
     tft.setTextColor(UI_COL_BG, colAuto);
-    tft.drawString("ACTIU", bx2 + bw2/2, by + 145);
+    tft.drawString("ACTIU", bx2 + bw2 / 2, by + 175);
   }
 
   tft.fillRect(0, SCREEN_H - 35, SCREEN_W, 35, UI_COL_CARD);
+
   char fbuf[80];
-  snprintf(fbuf, sizeof(fbuf), "Pes: %.1fg T:%.0fC H:%.0f%% %s",
-           telemetry.weightG, telemetry.temperatureC, telemetry.humidity,
-           telemetry.wifiUp ? "WiFi OK" : "Sense WiFi");
+  snprintf(
+    fbuf,
+    sizeof(fbuf),
+    "Pes: %.1fg  T:%.0fC  H:%.0f%%  %s",
+    telemetry.weightG,
+    telemetry.temperatureC,
+    telemetry.humidity,
+    telemetry.wifiUp ? "WiFi OK" : "Sense WiFi"
+  );
+
   tft.setTextDatum(ML_DATUM);
   tft.setTextColor(UI_COL_MUTED, UI_COL_CARD);
   tft.setTextSize(1);
@@ -471,14 +545,19 @@ static void drawMainMenu() {
 }
 
 static void handleMainMenuTouch(uint16_t tx, uint16_t ty) {
-  int bw = 150, bh = 195, by = 45;
-  int bx2 = 164, bw2 = 150;
+  int bw = 230;
+  int bh = 230;
+  int by = 45;
 
-  if (tx >= 6 && tx <= 6 + bw && ty >= by && ty <= by + bh) {
+  int bx2 = 245;
+  int bw2 = SCREEN_W - bx2 - 5;
+
+  if (tx >= 5 && tx <= 5 + bw && ty >= by && ty <= by + bh) {
     uiRequestedMode = UI_MODE_MANUAL;
     transitionTo(UI_SCREEN_MANUAL_FEED);
     return;
   }
+
   if (tx >= bx2 && tx <= bx2 + bw2 && ty >= by && ty <= by + bh) {
     uiRequestedMode = UI_MODE_AUTO;
     transitionTo(UI_SCREEN_AUTO_MODE);
@@ -488,57 +567,92 @@ static void handleMainMenuTouch(uint16_t tx, uint16_t ty) {
 
 static void drawManualFeedScreen() {
   tft.fillRect(0, 0, SCREEN_W, 40, UI_COL_CARD);
+
   tft.setTextDatum(ML_DATUM);
   tft.setTextColor(UI_COL_ACCENT, UI_COL_CARD);
   tft.setTextSize(2);
   tft.drawString("< Enrere", 10, 20);
+
   tft.setTextDatum(MC_DATUM);
   tft.setTextColor(UI_COL_TEXT, UI_COL_CARD);
-  tft.setTextSize(1);
-  tft.drawString("DISPENSACIO MANUAL", SCREEN_W/2, 20);
+  tft.drawString("DISPENSACIO MANUAL", SCREEN_W / 2, 20);
 
   char wbuf[20];
   snprintf(wbuf, sizeof(wbuf), "%.1f g", telemetry.weightG);
+
   tft.setTextDatum(MC_DATUM);
   tft.setTextColor(UI_COL_TEXT, UI_COL_BG);
-  tft.setTextSize(5);
-  tft.drawString(wbuf, SCREEN_W/2, 85);
+  tft.setTextSize(6);
+  tft.drawString(wbuf, SCREEN_W / 2, 110);
+
   tft.setTextSize(1);
   tft.setTextColor(UI_COL_MUTED, UI_COL_BG);
-  tft.drawString("pes al plat", SCREEN_W/2, 120);
+  tft.drawString("pes al plat", SCREEN_W / 2, 150);
 
   if (cycle.active) {
-    int bx = 20, bby = 135, bw = SCREEN_W - 40, bbh = 14;
+    int bx = 20;
+    int bby = 165;
+    int bw = SCREEN_W - 40;
+    int bbh = 18;
+
     float frac = (cycle.targetG > 0) ? cycle.dispensedG / cycle.targetG : 0;
-    if (frac > 1) frac = 1;
+
+    if (frac > 1) {
+      frac = 1;
+    }
+
     tft.drawRect(bx, bby, bw, bbh, UI_COL_MUTED);
-    tft.fillRect(bx+1, bby+1, (int)((bw-2)*frac), bbh-2, UI_COL_ACCENT);
+    tft.fillRect(bx + 1, bby + 1, (int)((bw - 2) * frac), bbh - 2, UI_COL_ACCENT);
+
     char pbuf[24];
     snprintf(pbuf, sizeof(pbuf), "%.1f / %.1f g", cycle.dispensedG, cycle.targetG);
+
     tft.setTextSize(1);
     tft.setTextColor(UI_COL_TEXT, UI_COL_BG);
-    tft.drawString(pbuf, SCREEN_W/2, bby + bbh + 6);
+    tft.drawString(pbuf, SCREEN_W / 2, bby + bbh + 6);
   } else {
-    tft.fillRect(20, 135, SCREEN_W - 40, 30, UI_COL_BG);
+    tft.fillRect(20, 160, SCREEN_W - 40, 30, UI_COL_BG);
   }
 
-  int btnY = 175, btnH = 65;
+  int btnY = 200;
+  int btnH = 70;
+
   bool motorRunning = uiManualFeedActive && cycle.active;
   uint16_t btnCol = motorRunning ? UI_COL_DANGER : UI_COL_ACCENT;
 
   tft.fillRect(20, btnY, SCREEN_W - 40, btnH, btnCol);
   tft.drawRect(20, btnY, SCREEN_W - 40, btnH, UI_COL_TEXT);
+
   tft.setTextDatum(MC_DATUM);
   tft.setTextColor(motorRunning ? UI_COL_TEXT : UI_COL_BG, btnCol);
   tft.setTextSize(2);
-  tft.drawString(motorRunning ? "ATURAR" : "MANTÉ PER DISPENSAR", SCREEN_W/2, btnY + btnH/2);
+  tft.drawString(
+    motorRunning ? "ATURAR" : "MANTENIR PREMUT PER DISPENSAR",
+    SCREEN_W / 2,
+    btnY + btnH / 2
+  );
 
   tft.fillRect(0, SCREEN_H - 30, SCREEN_W, 30, UI_COL_CARD);
+
   const char* stateStr = "Idle";
-  if (currentState == STATE_DISPENSING) stateStr = "Dispensant...";
-  if (currentState == STATE_ERROR)      stateStr = "ERROR";
+
+  if (currentState == STATE_DISPENSING) {
+    stateStr = "Dispensant...";
+  }
+
+  if (currentState == STATE_ERROR) {
+    stateStr = "ERROR";
+  }
+
   char ffbuf[48];
-  snprintf(ffbuf, sizeof(ffbuf), "Estat: %s    %s", stateStr, telemetry.wifiUp ? "WiFi OK" : "Sense WiFi");
+  snprintf(
+    ffbuf,
+    sizeof(ffbuf),
+    "Estat: %s    %s",
+    stateStr,
+    telemetry.wifiUp ? "WiFi OK" : "Sense WiFi"
+  );
+
   tft.setTextDatum(ML_DATUM);
   tft.setTextColor(UI_COL_MUTED, UI_COL_CARD);
   tft.setTextSize(1);
@@ -554,7 +668,8 @@ static void handleManualFeedTouch(uint16_t tx, uint16_t ty) {
     transitionTo(UI_SCREEN_MAIN);
     return;
   }
-  if (tx >= 20 && tx <= SCREEN_W-20 && ty >= 175 && ty <= 240) {
+
+  if (tx >= 20 && tx <= SCREEN_W - 20 && ty >= 200 && ty <= 270) {
     uiManualFeedActive = true;
     screenDirty = true;
   }
@@ -569,38 +684,50 @@ static void handleManualFeedRelease() {
 
 static void drawAutoModeScreen() {
   tft.fillRect(0, 0, SCREEN_W, 40, UI_COL_CARD);
+
   tft.setTextDatum(ML_DATUM);
   tft.setTextColor(UI_COL_ACCENT, UI_COL_CARD);
   tft.setTextSize(2);
   tft.drawString("< Enrere", 10, 20);
+
   tft.setTextDatum(MC_DATUM);
   tft.setTextColor(UI_COL_TEXT, UI_COL_CARD);
-  tft.setTextSize(1);
-  tft.drawString("MODE AUTOMATIC", SCREEN_W/2, 20);
+  tft.drawString("MODE AUTOMATIC", SCREEN_W / 2, 20);
 
   tft.fillRect(0, 45, SCREEN_W, 50, UI_COL_OK);
+
   tft.setTextDatum(MC_DATUM);
   tft.setTextColor(UI_COL_BG, UI_COL_OK);
   tft.setTextSize(2);
-  tft.drawString("Mode automatic ACTIU", SCREEN_W/2, 70);
+  tft.drawString("Mode automatic ACTIU", SCREEN_W / 2, 70);
 
   tft.setTextDatum(TL_DATUM);
   tft.setTextColor(UI_COL_TEXT, UI_COL_BG);
-  tft.setTextSize(1);
+  tft.setTextSize(2);
+
   int iy = 110;
-  tft.drawString("El dispensador segueix els horaris", 12, iy); iy += 15;
+
+  tft.drawString("El dispensador segueix els horaris", 12, iy);
+  iy += 24;
+
   tft.setTextColor(UI_COL_MUTED, UI_COL_BG);
-  tft.drawString("configurats a l'aplicacio web de Supabase.", 12, iy); iy += 22;
+  tft.setTextSize(1);
+  tft.drawString("configurats a l'aplicacio web de Supabase.", 12, iy);
+  iy += 20;
 
   tft.setTextColor(UI_COL_TEXT, UI_COL_BG);
   tft.setTextSize(2);
+
   if (scheduleCount > 0) {
     char nbuf[40];
     snprintf(nbuf, sizeof(nbuf), "Horaris actius: %u", scheduleCount);
-    tft.drawString(nbuf, 12, iy); iy += 28;
+    tft.drawString(nbuf, 12, iy);
+    iy += 28;
   } else {
     tft.setTextColor(UI_COL_WARN, UI_COL_BG);
-    tft.drawString("Sense horaris carregats", 12, iy); iy += 28;
+    tft.drawString("Sense horaris carregats", 12, iy);
+    iy += 28;
+
     tft.setTextColor(UI_COL_MUTED, UI_COL_BG);
     tft.setTextSize(1);
     tft.drawString("Comprova la connexio WiFi i la configuracio a Supabase.", 12, iy);
@@ -608,16 +735,18 @@ static void drawAutoModeScreen() {
 
   char wbuf[24];
   snprintf(wbuf, sizeof(wbuf), "Pes actual: %.1f g", telemetry.weightG);
+
   tft.setTextColor(UI_COL_ACCENT, UI_COL_BG);
   tft.setTextSize(2);
   tft.drawString(wbuf, 12, SCREEN_H - 90);
 
   tft.fillRect(20, SCREEN_H - 65, SCREEN_W - 40, 50, UI_COL_DANGER);
   tft.drawRect(20, SCREEN_H - 65, SCREEN_W - 40, 50, UI_COL_TEXT);
+
   tft.setTextDatum(MC_DATUM);
   tft.setTextColor(UI_COL_TEXT, UI_COL_DANGER);
   tft.setTextSize(2);
-  tft.drawString("DESACTIVAR MODE AUTO", SCREEN_W/2, SCREEN_H - 40);
+  tft.drawString("DESACTIVAR MODE AUTO", SCREEN_W / 2, SCREEN_H - 40);
 
   tft.setTextDatum(TL_DATUM);
   screenDirty = false;
@@ -628,6 +757,7 @@ static void handleAutoModeTouch(uint16_t tx, uint16_t ty) {
     transitionTo(UI_SCREEN_MAIN);
     return;
   }
+
   if (ty >= SCREEN_H - 65) {
     uiRequestedMode = UI_MODE_MANUAL;
     transitionTo(UI_SCREEN_MAIN);
@@ -635,53 +765,93 @@ static void handleAutoModeTouch(uint16_t tx, uint16_t ty) {
   }
 }
 
+// ==========================================================================
+// LECTURA TOUCH CORREGIDA
+// ==========================================================================
+
 static bool getTouchPoint(uint16_t &tx, uint16_t &ty) {
+  static bool wasTouched = false;
+  static uint32_t lastReleaseMs = 0;
+
   const uint16_t z = tft.getTouchRawZ();
+
+  // No hi ha toc
   if (z < 400) {
+    if (wasTouched) {
+      lastReleaseMs = millis();
+    }
+
+    wasTouched = false;
+
     if (activeUIScreen == UI_SCREEN_MANUAL_FEED) {
       handleManualFeedRelease();
     }
+
     return false;
   }
-  bool ok = tft.getTouch(&tx, &ty);
-  if (ok) {
-    // DEBUG: coordenades mapejades + pressió crua
-    Serial.printf("[touch] px=(%u,%u) rawZ=%u\n", tx, ty, z);
-  }
-  return ok;
-}
 
+  // Si encara estem mantenint el dit premut, no comptem un altre toc
+  if (wasTouched) {
+    return false;
+  }
+
+  // Petit debounce després de deixar anar
+  if (millis() - lastReleaseMs < 120) {
+    return false;
+  }
+
+  bool ok = tft.getTouch(&tx, &ty);
+
+  if (!ok) {
+    return false;
+  }
+
+  // Correcció perquè el teu TL sortia com BR: px=(300,224)
+  tx = SCREEN_W - 1 - tx;
+  ty = SCREEN_H - 1 - ty;
+
+  wasTouched = true;
+
+  Serial.printf("[touch] px=(%u,%u) rawZ=%u\n", tx, ty, z);
+
+  return true;
+}
 
 void setup() {
   Serial.begin(115200);
+
   tft.init();
   tft.setRotation(1);
+
   touchUIInit();
 }
 
 void loop() {
   static uint32_t lastUpdate = 0;
   uint32_t now = millis();
-  
+
   if (now - lastUpdate >= 60) {
     lastUpdate = now;
     touchUIUpdate();
   }
-  
+
   if (uiRequestedMode == UI_MODE_MANUAL) {
     if (uiManualFeedActive && !cycle.active) {
-       startDispense(100.0, "manual", "", "", "");
+      startDispense(100.0, "manual", "", "", "");
     }
+
     if (!uiManualFeedActive && cycle.active) {
-       motorEmergencyStop();
+      motorEmergencyStop();
     }
   }
-  
+
   if (cycle.active) {
-     cycle.dispensedG += 0.5;
-     telemetry.weightG = cycle.dispensedG;
-     if (cycle.dispensedG >= cycle.targetG) {
-        cycleFinish("completed", cycle.dispensedG);
-     }
+    cycle.dispensedG += 0.5;
+    telemetry.weightG = cycle.dispensedG;
+
+    if (cycle.dispensedG >= cycle.targetG) {
+      cycleFinish("completed", cycle.dispensedG);
+    }
   }
 }
+

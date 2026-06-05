@@ -1,13 +1,16 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <Arduino.h>
+
 // ==========================================================================
 // CatFeeder — Global Configuration
 // Integrated Project II — GR15 [GEMEC-09UV]
 // ==========================================================================
 // Pin map matches the REAL soldered hardware (see project doc T5).
 // ESP32 WROOM-32 + ILI9341 2.8" 320x240 (XPT2046 touch, shared SPI bus)
-// HX711 load cell, DHT22, DS3231 RTC, NEMA17 + DRV8825.
+// HX711 load cell, DHT22, NEMA17 + DRV8825.
+// DS3231 RTC removed to avoid I2C conflicts with the touch controller.
 // NO physical buttons — the only user interface is the touch screen.
 // ==========================================================================
 
@@ -38,7 +41,8 @@
 #define DISPLAY_ROTATION 1
 #define TOUCH_CS 21
 
-// --------------------------- I2C (RTC DS3231) ------------------------------
+// --------------------------- I2C (shared bus for future peripherals) -------
+// DS3231 RTC removed. I2C pins kept in case other I2C devices are added.
 #define I2C_SDA 32
 #define I2C_SCL 33
 #define I2C_CLOCK_HZ 400000
@@ -100,5 +104,29 @@ enum UIMode {
   UI_MODE_MANUAL,
   UI_MODE_AUTO
 };
+
+// --------------------------- Scale functions -------------------------------
+void scaleInit();
+void scaleTare();
+float scaleRead();
+void scaleCalibrate(float knownWeightG);
+
+// --------------------------- Motor / Dispense functions ---------------------
+bool startDispense(float grams, const char *trigger, const String &commandId, const String &catId, const String &scheduleId);
+
+// --------------------------- Time & Timezone -------------------------------
+struct DeviceTime {
+  bool valid;
+  uint8_t hour;
+  uint8_t minute;
+  uint8_t second;
+  uint8_t wday;  // 0 = Sunday, 6 = Saturday
+  uint16_t yday; // 0 to 365
+};
+extern DeviceTime currentDeviceTime;
+
+#define TIMEZONE_OFFSET_SEC 7200  // UTC+2 (e.g. Europe/Madrid summer time)
+void updateTimeFromSupabase(const char* utcStr);
+void updateLocalClock();
 
 #endif // CONFIG_H

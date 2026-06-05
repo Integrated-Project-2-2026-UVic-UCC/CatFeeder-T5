@@ -34,9 +34,104 @@ void displaySplash(const char *text) {
   tft.setTextDatum(TL_DATUM);
 }
 
-// No-op for now. The render pipeline lands in the display phase.
+// Renders the real-time weight, clock, and status on the TFT screen.
 void displayUpdate() {
-  // intentionally empty
+  static DeviceState lastState = STATE_BOOT;
+  bool stateChanged = (currentState != lastState);
+  lastState = currentState;
+
+  // Clear screen and draw static container cards when the state transitions
+  if (stateChanged || (millis() < 3000 && !currentDeviceTime.valid)) {
+    tft.fillScreen(TFT_BLACK);
+    // Header card background (COL_CARD = 0x2124)
+    tft.fillRect(0, 0, 320, 32, 0x2124); 
+    // Main weight card background (COL_CARD_LIGHT = 0x18C3)
+    tft.fillRect(10, 42, 300, 110, 0x18C3); 
+  }
+
+  // 1) Render Header
+  tft.setTextDatum(ML_DATUM);
+  tft.setTextColor(TFT_CYAN, 0x2124);
+  tft.setTextSize(2);
+  tft.drawString("CatFeeder T5", 10, 16);
+
+  tft.setTextDatum(MR_DATUM);
+  tft.setTextColor(TFT_WHITE, 0x2124);
+  char timeBuf[20];
+  if (currentDeviceTime.valid) {
+    snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d", 
+             currentDeviceTime.hour, currentDeviceTime.minute, currentDeviceTime.second);
+  } else {
+    snprintf(timeBuf, sizeof(timeBuf), "Syncing time...");
+  }
+  tft.drawString(timeBuf, 310, 16);
+  tft.setTextDatum(TL_DATUM);
+
+  // 2) Render Weight Container
+  tft.setTextDatum(MC_DATUM);
+  tft.setTextColor(0x7BEF, 0x18C3); // Grey label text
+  tft.setTextSize(2);
+  tft.drawString("PES DEL BOL", 160, 60);
+
+  tft.setTextColor(TFT_WHITE, 0x18C3);
+  tft.setTextSize(5);
+  char weightBuf[20];
+  snprintf(weightBuf, sizeof(weightBuf), "%5.1f g", telemetry.weightG);
+  tft.drawString(weightBuf, 160, 105);
+
+  // 3) Render Status and Progress Section (at the bottom half)
+  if (currentState == STATE_DISPENSING) {
+    tft.setTextDatum(MC_DATUM);
+    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    tft.setTextSize(2);
+    tft.drawString("DISPENSANT...", 160, 170);
+
+    // Draw progress bar
+    int barW = 260;
+    int barH = 16;
+    int barX = 30;
+    int barY = 190;
+    float frac = cycle.dispensedG / (cycle.targetG > 0 ? cycle.targetG : 1.0f);
+    if (frac < 0.0f) frac = 0.0f;
+    if (frac > 1.0f) frac = 1.0f;
+    tft.drawRect(barX, barY, barW, barH, TFT_WHITE);
+    tft.fillRect(barX + 2, barY + 2, barW - 4, barH - 4, TFT_BLACK);
+    int fillW = (int)((barW - 4) * frac);
+    if (fillW > 0) {
+      tft.fillRect(barX + 2, barY + 2, fillW, barH - 4, TFT_CYAN);
+    }
+    
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setTextSize(2);
+    char progBuf[30];
+    snprintf(progBuf, sizeof(progBuf), "%.1f / %.1f g", cycle.dispensedG, cycle.targetG);
+    tft.drawString(progBuf, 160, 222);
+  } else if (currentState == STATE_ERROR) {
+    tft.setTextDatum(MC_DATUM);
+    tft.setTextColor(TFT_RED, TFT_BLACK);
+    tft.setTextSize(3);
+    tft.drawString("ERROR!", 160, 175);
+    
+    tft.setTextSize(2);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.drawString(lastErrorMessage, 160, 210);
+  } else {
+    // STATE_IDLE
+    tft.setTextDatum(MC_DATUM);
+    tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    tft.setTextSize(2);
+    tft.drawString("SISTEMA A PUNT", 160, 165);
+
+    // Draw DHT22 environmental readings
+    tft.setTextSize(2);
+    tft.setTextColor(0x7BEF, TFT_BLACK); // Grey text
+    char envBuf[40];
+    snprintf(envBuf, sizeof(envBuf), "T: %.1f C   H: %.0f %%", 
+             isnan(telemetry.temperatureC) ? 0.0f : telemetry.temperatureC, 
+             isnan(telemetry.humidity) ? 0.0f : telemetry.humidity);
+    tft.drawString(envBuf, 160, 205);
+  }
+  tft.setTextDatum(TL_DATUM);
 }
 
 #if 0
@@ -73,12 +168,8 @@ static void drawHeader() {
   tft.setTextDatum(MR_DATUM);
   tft.setTextColor(COL_TEXT, COL_CARD);
   char buf[24];
-  if (telemetry.rtcOk) {
-    DateTime now = rtc.now();
-    snprintf(buf, sizeof(buf), "%02u:%02u:%02u", now.hour(), now.minute(), now.second());
-  } else {
-    snprintf(buf, sizeof(buf), "--:--:--");
-  }
+  // RTC removed: show static placeholder instead of live clock.
+  snprintf(buf, sizeof(buf), "--:--:--");
   tft.drawString(buf, tft.width() - 8, 14);
   tft.setTextDatum(TL_DATUM);
 }

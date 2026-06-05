@@ -2,8 +2,10 @@
 // Integrated Project II — GR15 [GEMEC-09UV]  Universitat de Vic — UCC
 // ==========================================================================
 // This sketch coordinates every physical subsystem of the automatic cat
-// feeder: stepper dispenser, load cell (HX711), DHT22, DS3231 RTC, ILI9341
+// feeder: stepper dispenser, load cell (HX711), DHT22, ILI9341
 // touch display (touch-only UI) and the Supabase cloud link.
+// NOTE: DS3231 RTC removed to avoid I2C conflicts; time is managed via
+// millis() and NTP-sourced timestamps from Supabase are used instead.
 //
 // The main loop is strictly non-blocking: all periodic tasks are driven by
 // millis() timers and the stepper is stepped via AccelStepper::run().
@@ -20,7 +22,6 @@
 #include <ArduinoJson.h>
 #include <DHT.h>
 #include <HX711.h>
-#include <RTClib.h>
 #include <TFT_eSPI.h>
 
 // Shared types referenced by auto-generated prototypes that the IDE hoists to
@@ -31,7 +32,6 @@
 TFT_eSPI tft = TFT_eSPI();
 HX711 scale;
 DHT dht(DHT_PIN, DHT22);
-RTC_DS3231 rtc;
 AccelStepper stepper(AccelStepper::DRIVER, STEPPER_STEP, STEPPER_DIR);
 
 // ---------- System-wide state --------------------------------------------
@@ -52,8 +52,7 @@ struct Telemetry {
   float temperatureC;
   float humidity;
   bool wifiUp;
-  bool rtcOk;
-} telemetry = {0.0f, NAN, NAN, false, false};
+} telemetry = {0.0f, NAN, NAN, false};
 
 // Active dispensing cycle descriptor.
 struct FeedingCycle {
@@ -80,16 +79,18 @@ extern bool     touchDetected;
 extern uint16_t touchX;
 extern uint16_t touchY;
 
-// ---- Cross-tab schedule state (defined in RTCManager.ino) ----------------
+// ---- Cross-tab schedule state (defined in ScheduleManager.ino) -----------
 extern uint8_t  scheduleCount;
 
 // Periodic-task timers.
-static uint32_t tLastSensors = 0;
-static uint32_t tLastDisplay = 0;
-static uint32_t tLastHeartbeat = 0;
-static uint32_t tLastCmdPoll = 0;
-static uint32_t tLastCfgPoll = 0;
-static uint32_t tLastWifiTry = 0;
+static uint32_t tLastSensors      = 0;
+static uint32_t tLastDisplay      = 0;
+static uint32_t tLastHeartbeat    = 0;
+static uint32_t tLastCmdPoll      = 0;
+static uint32_t tLastCfgPoll      = 0;
+static uint32_t tLastWifiTry      = 0;
+static uint32_t tLastWeightPublish = 0;   // publish weight even when idle
+#define IDLE_WEIGHT_PUBLISH_MS 10000      // every 10 s in idle state
 
 // ==========================================================================
 //                                   SETUP
@@ -113,7 +114,6 @@ void setup() {
   displaySplash("Booting...");
 
   i2cInit();
-  rtcInit();
   scaleInit();
   sensorsInit();
   motorInit();
@@ -133,8 +133,9 @@ void setup() {
 void loop() {
   const uint32_t now = millis();
 
-  // 1) Always step the motor first — AccelStepper is cooperative.
-  stepper.run();
+  // Motor stepping is now handled inside runDispensingCycle() via direct GPIO.
+  // (AccelStepper kept in headers for motorInit compatibility but not used
+  //  for dispensing — direct micros()-based pulses match Test_Motor.ino.)
 
   // 2) Touch input (read only; no rendering yet).
   touchInputUpdate();
@@ -184,7 +185,16 @@ void loop() {
 
   // 7) Network-bound tasks (skip cleanly when offline).
   if (WiFi.status() == WL_CONNECTED) {
-    telemetry.wifiUp = true;
+    if (!telemetry.wifiUp) {
+      telemetry.wifiUp = true;
+      // WiFi just connected: sync heartbeat (gets time) and configs immediately
+      tLastHeartbeat = now;
+      sendHeartbeat();
+      tLastCfgPoll = now;
+      pollDeviceConfig();
+      tLastCmdPoll = now;
+      pollPendingCommands();
+    }
     if (now - tLastCmdPoll >= COMMAND_POLL_INTERVAL_MS) {
       tLastCmdPoll = now;
       pollPendingCommands();
@@ -196,6 +206,12 @@ void loop() {
     if (now - tLastHeartbeat >= HEARTBEAT_INTERVAL_MS) {
       tLastHeartbeat = now;
       sendHeartbeat();
+    }
+    // Publish current weight every 10 s even when idle so the webapp
+    // "Live Sensor Readings" always shows an up-to-date value.
+    if (!cycle.active && now - tLastWeightPublish >= IDLE_WEIGHT_PUBLISH_MS) {
+      tLastWeightPublish = now;
+      publishRealtimeWeight(telemetry.weightG, 0, 0);
     }
   } else {
     telemetry.wifiUp = false;
