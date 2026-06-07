@@ -22,6 +22,15 @@ This prototype uses an auger screw mechanism driven by a NEMA 17 stepper motor. 
 
 ---
 
+
+## 🎥 Commercial Video
+
+[![Watch the commercial video](./Documentation/Automatic_Cat_Feeder.png)](./Documentation/Automatic_Cat_Feeder.mp4)
+
+Click the image above to watch the commercial video of the Automatic Cat Feeder prototype.
+
+---
+
 ## 🎯 Main Features
 
 * Scheduled automatic feeding.
@@ -60,14 +69,14 @@ The mechanical structure is designed to be manufactured mainly using FDM 3D prin
 
 ### 3D-Printed Parts
 
-| Image                                                 | Part                           | Description                              | Recommended Material | Notes                                                  |
-| ----------------------------------------------------- | ------------------------------ | ---------------------------------------- | -------------------- | ------------------------------------------------------ |
-| <img src="./images/main-body.jpg" width="90">         | Main body                      | Main structural frame of the feeder      | PLA / PETG           | Supports the hopper, motor, electronics, and bowl area |
-| <img src="./images/food-hopper.jpg" width="90">       | Food hopper                    | Stores dry cat food                      | PETG recommended     | Smooth internal walls recommended                      |
-| <img src="./images/auger-screw.jpg" width="90">       | Auger screw / dispensing screw | Moves food from the hopper to the outlet | PETG recommended     | Must be tested with the real kibble size               |
-| <img src="./images/bowl-support.jpg" width="90">      | Bowl support                   | Holds the bowl and load cell system      | PLA / PETG           | Should avoid unwanted movement during weighing         |
-| <img src="./images/motor-mount.jpg" width="90">       | Motor mount                    | Holds the NEMA 17 motor in position      | PETG / ABS           | Must keep the motor aligned with the dispensing screw  |
-| <img src="./images/electronics-cover.jpg" width="90"> | Electronics cover              | Protects the electronics and wiring      | PLA / PETG           | Ventilation openings recommended                       |
+| Part                           | Description                              | Recommended Material | Notes                                                  |
+| ------------------------------ | ------------------------------ | ---------------------------------------- | -------------------- | ------------------------------------------------------ |
+| Main body                      | Main structural frame of the feeder      | PLA / PETG           | Supports the hopper, motor, electronics, and bowl area |
+| Food hopper                    | Stores dry cat food                      | PETG recommended     | Smooth internal walls recommended                      |
+| Auger screw / dispensing screw | Moves food from the hopper to the outlet | PETG recommended     | Must be tested with the real kibble size               |
+| Bowl support                   | Holds the bowl and load cell system      | PLA / PETG           | Should avoid unwanted movement during weighing         |
+| Motor mount                    | Holds the NEMA 17 motor in position      | PETG / ABS           | Must keep the motor aligned with the dispensing screw  |
+| Electronics cover              | Protects the electronics and wiring      | PLA / PETG           | Ventilation openings recommended                       |
 
 
 ---
@@ -160,41 +169,6 @@ The software controls:
 
 ---
 
-## 📁 Suggested Repository Structure
-
-```text
-AutomaticCatFeeder/
-├── README.md
-├── LICENSE
-├── docs/
-│   ├── technical_document.pdf
-│   └── schematics/
-│       └── electrical_schematic.png
-├── firmware/
-│   └── AutomaticCatFeeder/
-│       ├── AutomaticCatFeeder.ino
-│       ├── config.h
-│       ├── motor_control.cpp
-│       ├── motor_control.h
-│       ├── scale_manager.cpp
-│       ├── scale_manager.h
-│       ├── rtc_manager.cpp
-│       ├── rtc_manager.h
-│       ├── display_manager.cpp
-│       ├── display_manager.h
-│       ├── sensor_manager.cpp
-│       ├── sensor_manager.h
-│       ├── feeder_logic.cpp
-│       └── feeder_logic.h
-├── hardware/
-│   ├── electrical/
-│   │   └── schematics_electronic.png
-│   └── mechanical/
-├── images/
-└── stl/
-```
-
----
 
 ## 🔁 Control Algorithm
 
@@ -305,49 +279,6 @@ Recommended process:
 
 ---
 
-## 📷 Images
-
-Project images should be stored in the `images/` folder.
-
-Recommended filenames:
-
-```text
-images/
-├── main-body.jpg
-├── food-hopper.jpg
-├── auger-screw.jpg
-├── bowl-support.jpg
-├── motor-mount.jpg
-├── electronics-cover.jpg
-├── m4-screw.jpg
-├── threaded-inserts.jpg
-├── wires.jpg
-├── heat-shrink-tubing.jpg
-├── food-bowl.jpg
-├── esp32-wroom-32.jpg
-├── nema17-stepper-motor.jpg
-├── drv8825-driver.jpg
-├── load-cell-hx711.jpg
-├── dht22-sensor.jpg
-├── rtc-ds3231.jpg
-├── lcd-tft-35-touch-display.jpg
-├── mini-ups-6000mah.jpg
-└── universal-pcb.jpg
-```
-
-Example image usage:
-
-```markdown
-![Automatic Cat Feeder Prototype](./images/prototype.jpg)
-```
-
----
-
-## 🎥 Demo
-
-YouTube video demo: coming soon.
-
----
 
 ## 🚀 Future Improvements
 
