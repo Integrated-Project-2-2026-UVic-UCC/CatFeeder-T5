@@ -70,7 +70,7 @@ The mechanical structure is designed to be manufactured mainly using FDM 3D prin
 ### 3D-Printed Parts
 
 | Part                           | Description                              | Recommended Material | Notes                                                  |
-| ------------------------------ | ------------------------------ | ---------------------------------------- | -------------------- | ------------------------------------------------------ |
+| ------------------------------ | ---------------------------------------- | -------------------- | ------------------------------------------------------ |
 | Main body                      | Main structural frame of the feeder      | PLA / PETG           | Supports the hopper, motor, electronics, and bowl area |
 | Food hopper                    | Stores dry cat food                      | PETG recommended     | Smooth internal walls recommended                      |
 | Auger screw / dispensing screw | Moves food from the hopper to the outlet | PETG recommended     | Must be tested with the real kibble size               |
