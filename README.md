@@ -91,7 +91,7 @@ The mechanical structure of the feeder is based mainly on 3D-printed parts and s
 | <img src="./images/threaded-inserts.jpg" width="90">   | Threaded inserts      | Metal inserts for stronger screw mounting |    Optional | Recommended for repeated disassembly          |
 | <img src="./images/wires.jpg" width="90">              | Wires / jumper cables | Electrical connections                    | As required | Use suitable wire gauge for motor power lines |
 | <img src="./images/heat-shrink-tubing.jpg" width="90"> | Heat-shrink tubing    | Wire insulation and protection            | As required | Recommended for safer wiring                  |
-| <img src="./images/food-bowl.jpg" width="90">          | Food bowl             | Receives the dispensed food               |           1 | Must be compatible with the load cell setup   |
+
 
 ---
 
