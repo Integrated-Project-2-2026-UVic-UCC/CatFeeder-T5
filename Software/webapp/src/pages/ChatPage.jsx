@@ -34,7 +34,7 @@ export default function ChatPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('http://192.168.1.42:5678/webhook/69ddccfe-f7be-44b9-adb9-7471dbdc24e4', {
+      const response = await fetch('https://micheline-aeonian-paula.ngrok-free.dev/webhook/69ddccfe-f7be-44b9-adb9-7471dbdc24e4', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
