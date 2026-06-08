@@ -6,6 +6,10 @@ The goal of this project is to design and build a low-cost mechatronic prototype
 
 ---
 
+<p align="center">
+  <img src="./images/Automatic_Cat_Feeder_cat.png" alt="Automatic Cat Feeder Prototype" width="1200">
+</p>
+
 ## 📌 Project Overview
 
 Automatic cat feeders are useful embedded systems because they combine several engineering areas in a single functional product:
