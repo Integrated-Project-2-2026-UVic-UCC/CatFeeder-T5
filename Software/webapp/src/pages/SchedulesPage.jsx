@@ -129,7 +129,22 @@ export default function SchedulesPage() {
 
   const deleteSchedule = async (s) => {
     if (!window.confirm('Delete this schedule?')) return
-    await supabase.from('schedules').delete().eq('id', s.id)
+    
+    // Unlink any feed logs that reference this schedule to prevent foreign key constraint errors
+    const { error: unlinkError } = await supabase.from('feed_logs')
+      .update({ schedule_id: null })
+      .eq('schedule_id', s.id)
+      
+    if (unlinkError) {
+      console.error('Warning: could not unlink feed logs:', unlinkError)
+    }
+
+    const { error } = await supabase.from('schedules').delete().eq('id', s.id)
+    if (error) {
+      console.error('Delete error:', error)
+      addToast('Failed to delete: ' + error.message, 'danger')
+      return
+    }
     await fetchSchedules()
     addToast('Schedule deleted', 'info')
   }

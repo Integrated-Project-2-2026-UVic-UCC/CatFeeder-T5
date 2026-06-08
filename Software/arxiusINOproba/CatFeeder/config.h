@@ -2,6 +2,9 @@
 #define CONFIG_H
 
 #include <Arduino.h>
+#include <TFT_eSPI.h>
+
+extern TFT_eSPI tft;
 
 // ==========================================================================
 // CatFeeder — Global Configuration
@@ -97,24 +100,134 @@
 #define REALTIME_WEIGHT_INTERVAL_MS 500
 #define DISPLAY_REFRESH_MS 250
 
-// --------------------------- Touch UI mode ---------------------------------
-// Defined here (dependency-free) so every .ino tab sees it regardless of the
-// order in which the Arduino IDE concatenates the tabs.
+// --------------------------- Device state & structures ---------------------
+enum DeviceState {
+  STATE_BOOT,
+  STATE_IDLE,
+  STATE_DISPENSING,
+  STATE_ERROR,
+  STATE_OFFLINE_DEGRADED
+};
+extern DeviceState currentState;
+extern const char *lastErrorMessage;
+
+struct Telemetry {
+  float weightG; // current net weight on the tray
+  float temperatureC;
+  float humidity;
+  bool wifiUp;
+};
+extern Telemetry telemetry;
+
+struct FeedingCycle {
+  bool active;
+  float targetG;
+  float dispensedG;
+  float baselineG; // tray weight at the moment the cycle starts
+  uint32_t startMs;
+  uint32_t lastPublishMs;
+  const char *trigger;   // "manual" or "scheduled"
+  String commandId;      // Supabase commands.id (empty for scheduled)
+  String catId;          // cat UUID
+  String scheduleId;     // schedule UUID (empty for manual)
+  String startedAtIso;   // ISO-8601 timestamp captured at cycle start
+};
+extern FeedingCycle cycle;
+
+// --------------------------- Touch UI mode & screens -----------------------
 enum UIMode {
   UI_MODE_MANUAL,
   UI_MODE_AUTO
 };
+extern UIMode uiRequestedMode;
 
-// --------------------------- Scale functions -------------------------------
+enum UIScreen {
+  UI_SCREEN_SCREENSAVER,
+  UI_SCREEN_UNLOCK,
+  UI_SCREEN_MAIN,
+  UI_SCREEN_MANUAL_FEED,
+  UI_SCREEN_AUTO_MODE
+};
+extern UIScreen activeUIScreen;
+extern bool screenDirty;
+extern uint8_t scheduleCount;
+
+// Status & settings for drawing
+extern bool eyesOpen;
+extern bool cornerHit[4];
+extern uint8_t cornerHitCount;
+
+extern uint32_t lastTouchMs;
+extern uint32_t lastBlinkMs;
+extern uint32_t lastPeriodicRedrawMs;
+extern uint32_t lastManualDynamicMs;
+extern uint32_t firstCornerMs;
+
+// ---------------- COLORS RGB565 ----------------
+#define UI_COL_BG               0x0820
+#define UI_COL_CARD             0x1082
+#define UI_COL_ACCENT           0x07FF
+#define UI_COL_OK               0x07E0
+#define UI_COL_DANGER           0xF800
+#define UI_COL_WARN             0xFD20
+#define UI_COL_TEXT             0xFFFF
+#define UI_COL_MUTED            0x7BCF
+#define UI_COL_OVERLAY          0x0000
+#define UI_COL_CAT_LINE         0xC618
+
+// ---------------- UI CONFIG ----------------
+#define UI_IDLE_TIMEOUT_MS      30000
+#define CAT_BLINK_INTERVAL_MS   3000
+#define CORNER_HIT_ZONE_PX      56
+#define CORNER_TIMEOUT_MS       5000
+#define TOUCH_Z_THRESHOLD       350
+
+#define MAIN_REDRAW_MS          1000
+#define AUTO_REDRAW_MS          1000
+#define MANUAL_DYNAMIC_MS       250
+
+// ---------------- MANUAL SCREEN LAYOUT ----------------
+#define MANUAL_BTN_X            18
+#define MANUAL_BTN_Y            146
+#define MANUAL_BTN_W            284
+#define MANUAL_BTN_H            74
+
+#define MANUAL_BACK_W           96
+#define HEADER_H                32
+#define FOOTER_H                18
+
+// --------------------------- Global functions ------------------------------
+void touchUIInit();
+void touchInputInit();
+void touchInputUpdate();
+void resetUnlockPattern();
+
+void displayInit();
+void displaySplash(const char *text);
+void displayUpdate();
+void transitionTo(UIScreen next);
+
+void drawScreensaver();
+void drawUnlockScreen();
+void drawMainMenu();
+void drawManualFeedScreen();
+void drawManualFeedDynamic(bool force);
+void drawAutoModeScreen();
+
+// Scale functions
 void scaleInit();
 void scaleTare();
 float scaleRead();
 void scaleCalibrate(float knownWeightG);
 
-// --------------------------- Motor / Dispense functions ---------------------
+// Motor / Dispense functions
 bool startDispense(float grams, const char *trigger, const String &commandId, const String &catId, const String &scheduleId);
+void stopDispense();
+void motorEmergencyStop();
+void runDispensingCycle();
+void checkScheduledFeeds();
 
-// --------------------------- Time & Timezone -------------------------------
+// Time & Timezone
 struct DeviceTime {
   bool valid;
   uint8_t hour;
@@ -128,5 +241,13 @@ extern DeviceTime currentDeviceTime;
 #define TIMEZONE_OFFSET_SEC 7200  // UTC+2 (e.g. Europe/Madrid summer time)
 void updateTimeFromSupabase(const char* utcStr);
 void updateLocalClock();
+
+// Supabase REST calls
+void sendHeartbeat();
+void pollPendingCommands();
+void pollDeviceConfig();
+void publishRealtimeWeight(float weightG, float dispensedG, float targetG);
+void logFeedEvent(const char *catId, float targetG, float actualG, const char *trigger, const char *status);
+void updateCommandStatus(const String &cmdId, const char *status, float actualGrams);
 
 #endif // CONFIG_H

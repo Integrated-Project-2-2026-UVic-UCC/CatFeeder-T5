@@ -35,49 +35,14 @@ DHT dht(DHT_PIN, DHT22);
 AccelStepper stepper(AccelStepper::DRIVER, STEPPER_STEP, STEPPER_DIR);
 
 // ---------- System-wide state --------------------------------------------
-enum DeviceState {
-  STATE_BOOT,
-  STATE_IDLE,
-  STATE_DISPENSING,
-  STATE_ERROR,
-  STATE_OFFLINE_DEGRADED
-};
-
 DeviceState currentState = STATE_BOOT;
 const char *lastErrorMessage = "";
 
 // Live sensor snapshot (updated by updateSensors()).
-struct Telemetry {
-  float weightG; // current net weight on the tray
-  float temperatureC;
-  float humidity;
-  bool wifiUp;
-} telemetry = {0.0f, NAN, NAN, false};
+Telemetry telemetry = {0.0f, NAN, NAN, false};
 
 // Active dispensing cycle descriptor.
-struct FeedingCycle {
-  bool active;
-  float targetG;
-  float dispensedG;
-  float baselineG; // tray weight at the moment the cycle starts
-  uint32_t startMs;
-  uint32_t lastPublishMs;
-  const char *trigger;   // "manual" or "scheduled"
-  String commandId;      // Supabase commands.id (empty for scheduled)
-  String catId;          // cat UUID
-  String scheduleId;     // schedule UUID (empty for manual)
-  String startedAtIso;   // ISO-8601 timestamp captured at cycle start
-} cycle = {false, 0, 0, 0, 0, 0, "manual", "", "", "", ""};
-
-// Display screen currently visible (display phase will use this).
-uint8_t activeScreen = 0; // 0 = dashboard, 1 = sensors, 2 = network
-
-// ---- Cross-tab touch state (defined in TouchInput.ino) -------------------
-extern UIMode   uiRequestedMode;
-extern bool     uiManualFeedActive;
-extern bool     touchDetected;
-extern uint16_t touchX;
-extern uint16_t touchY;
+FeedingCycle cycle = {false, 0.0f, 0.0f, 0.0f, 0, 0, "manual", "", "", "", ""};
 
 // ---- Cross-tab schedule state (defined in ScheduleManager.ino) -----------
 extern uint8_t  scheduleCount;
@@ -109,7 +74,8 @@ void setup() {
   pinMode(STEPPER_EN, OUTPUT);
   digitalWrite(STEPPER_EN, HIGH); // disabled (active-low)
 
-  // --- Bring up each subsystem ---------------------------------------------
+  touchInputInit();
+
   displayInit();
   displaySplash("Booting...");
 
@@ -118,7 +84,8 @@ void setup() {
   sensorsInit();
   motorInit();
   networkInit();
-  touchInputInit();
+
+  touchUIInit();
 
   currentState = STATE_IDLE;
   displaySplash("Ready");
@@ -137,17 +104,14 @@ void loop() {
   // (AccelStepper kept in headers for motorInit compatibility but not used
   //  for dispensing — direct micros()-based pulses match Test_Motor.ino.)
 
-  // 2) Touch input (read only; no rendering yet).
-  touchInputUpdate();
-
-  // 3) Manual-feed request from the touch panel.
-  if (uiRequestedMode == UI_MODE_MANUAL) {
-    if (uiManualFeedActive && currentState == STATE_IDLE) {
-      startDispense(DEFAULT_PORTION_G, "manual", String(""), String(""), String(""));
-    }
+  // 2) Touch input (reads touchscreen and drives UI screen state).
+  static uint32_t tLastTouchUpdate = 0;
+  if (now - tLastTouchUpdate >= 60) {
+    tLastTouchUpdate = now;
+    touchInputUpdate();
   }
 
-  // 4) State machine.
+  // 3) State machine.
   switch (currentState) {
   case STATE_IDLE:
     if (uiRequestedMode == UI_MODE_AUTO) {
@@ -164,8 +128,7 @@ void loop() {
     }
     break;
   case STATE_ERROR:
-    // Touch anywhere to acknowledge and clear the error.
-    if (touchDetected) clearError();
+    // Handled in touchInputUpdate(): clicking anywhere clears the error state.
     break;
   default:
     break;

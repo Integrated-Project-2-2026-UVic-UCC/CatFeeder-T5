@@ -57,6 +57,17 @@ void motorEmergencyStop() {
   Serial.println(F("[motor] emergency stop"));
 }
 
+// Orderly stop of manual dispensing (starts settling phase).
+void stopDispense() {
+  if (currentState == STATE_DISPENSING && cycle.active && !waitingFinalRead) {
+    ledcWrite(STEPPER_STEP, MOTOR_DUTY_STOP);  // stop PWM
+    motorEnable(false);
+    waitingFinalRead = true;
+    settleStartMs    = millis();
+    Serial.printf("[motor] manual dispense stopped — settling %ums\n", (unsigned)FEED_SETTLE_MS);
+  }
+}
+
 // --------------------------------------------------------------------------
 // Start a dispensing cycle.
 // Signature: (grams, trigger, commandId, catId, scheduleId)

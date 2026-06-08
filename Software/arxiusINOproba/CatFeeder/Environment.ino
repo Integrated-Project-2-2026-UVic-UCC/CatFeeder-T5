@@ -5,11 +5,10 @@
 static uint32_t tLastDht = 0;
 
 void sensorsInit() {
-  // Enable internal pull-up resistor. This is critical if the hardware does not
-  // have an external pull-up resistor on the DHT22 data line.
-  pinMode(DHT_PIN, INPUT_PULLUP);
-  dht.begin();
-  Serial.println(F("[env] DHT22 started (with internal pull-up)"));
+  // DHT sensor is currently bypassed; simulating data
+  // pinMode(DHT_PIN, INPUT_PULLUP);
+  // dht.begin();
+  Serial.println(F("[env] DHT22 simulated (sensor bypassed)"));
 }
 
 // --------------------------------------------------------------------------
@@ -28,8 +27,9 @@ void updateSensors() {
   const uint32_t now = millis();
   if (now - tLastDht >= DHT_READ_INTERVAL_MS) {
     tLastDht = now;
-    float h = dht.readHumidity();
-    float t = dht.readTemperature();
+    // Simulated DHT data
+    float h = random(400, 500) / 10.0; // 40.0% to 50.0%
+    float t = random(225, 236) / 10.0; // 22.5C to 23.5C
     if (!isnan(h)) {
       telemetry.humidity = h;
     } else {
