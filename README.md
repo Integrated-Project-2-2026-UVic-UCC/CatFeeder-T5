@@ -25,7 +25,8 @@ This prototype uses an auger screw mechanism driven by a NEMA 17 stepper motor. 
 
 ## 🎥 Commercial Video
 
-[![Watch the commercial video](./Documentation/Automatic_Cat_Feeder.png)](./Documentation/Automatic_Cat_Feeder.mp4)
+
+[![Watch the commercial video](./Documentation/Automatic_Cat_Feeder.png)](https://universitatdevic.sharepoint.com/:v:/t/IntegratedProjectII-GR15GEMEC-09UV-Equip/IQAjYwX-qLkBQKHNnmvlTQq8AcUehd5CAwjfhSMxtLNW64w?e=T4ewpL)
 
 Click the image above to watch the commercial video of the Automatic Cat Feeder prototype.
 
